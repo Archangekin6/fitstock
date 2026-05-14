@@ -1,1 +1,0 @@
-web: cd fitstock && gunicorn fitstock.wsgi:application
