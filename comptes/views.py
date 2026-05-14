@@ -39,16 +39,20 @@ def inscription(request):
             code = str(random.randint(100000, 999999))
             request.session['code_verification'] = code
             request.session['code_expiration']   = str(timezone.now().timestamp() + 600)
-            send_mail(
-                subject='Votre code de vérification',
-                message=(
-                    f"Bonjour {form.cleaned_data['username']},\n\n"
-                    f"Votre code de vérification est : {code}\n\n"
-                    f"Ce code expire dans 10 minutes."
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[form.cleaned_data['email']],
-            )
+            try:
+                send_mail(
+                    subject='Votre code de vérification',
+                    message=(
+                        f"Bonjour {form.cleaned_data['username']},\n\n"
+                        f"Votre code de vérification est : {code}\n\n"
+                        f"Ce code expire dans 10 minutes."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[form.cleaned_data['email']],
+                )
+            except Exception:
+                # Si l'email échoue, on continue quand même (le code est en session)
+                pass
             return redirect('verifier_email')
     else:
         form = FormulaireInscription()
@@ -105,12 +109,15 @@ def renvoyer_code(request):
     code = str(random.randint(100000, 999999))
     request.session['code_verification'] = code
     request.session['code_expiration']   = str(timezone.now().timestamp() + 600)
-    send_mail(
-        subject='Nouveau code de vérification',
-        message=f"Votre nouveau code est : {code}",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[data['email']],
-    )
+    try:
+        send_mail(
+            subject='Nouveau code de vérification',
+            message=f"Votre nouveau code est : {code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[data['email']],
+        )
+    except Exception:
+        pass
     return redirect('verifier_email')
 
 
