@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inscription</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg-deep: #0d0d1a;
+        --accent: #7c6aff;
+        --accent-glow: #a594ff;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.12);
+        --text-primary: #f0eeff;
+        --text-muted: rgba(240, 238, 255, 0.5);
+        --input-bg: rgba(255, 255, 255, 0.07);
+        --radius: 20px;
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "DM Sans", sans-serif;
+        background-color: var(--bg-deep);
+        background-image:
+          radial-gradient(
+            ellipse 80% 60% at 20% 10%,
+            rgba(124, 106, 255, 0.25) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 50% at 80% 90%,
+            rgba(100, 60, 200, 0.2) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 60% 40%,
+            rgba(60, 40, 160, 0.15) 0%,
+            transparent 50%
+          );
+        color: var(--text-primary);
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: 0;
+        animation: float 8s ease-in-out infinite alternate;
+      }
+      body::before {
+        width: 500px;
+        height: 500px;
+        background: rgba(124, 106, 255, 0.12);
+        top: -100px;
+        left: -100px;
+      }
+      body::after {
+        width: 400px;
+        height: 400px;
+        background: rgba(90, 50, 200, 0.1);
+        bottom: -80px;
+        right: -80px;
+        animation-delay: -4s;
+      }
+
+      @keyframes float {
+        from {
+          transform: translate(0, 0) scale(1);
+        }
+        to {
+          transform: translate(40px, 30px) scale(1.08);
+        }
+      }
+
+      .glass-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        width: min(820px, 95vw);
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px) saturate(1.4);
+        -webkit-backdrop-filter: blur(24px) saturate(1.4);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.04),
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          0 0 60px rgba(124, 106, 255, 0.08);
+        overflow: hidden;
+        animation: fadeUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(28px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .left {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 40px;
+      }
+
+      .right {
+        width: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 32px;
+        background: linear-gradient(
+          145deg,
+          rgba(124, 106, 255, 0.18) 0%,
+          rgba(80, 50, 200, 0.25) 100%
+        );
+        border-left: 1px solid var(--glass-border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .right::before {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(124, 106, 255, 0.25) 0%,
+          transparent 70%
+        );
+        top: -60px;
+        right: -60px;
+        pointer-events: none;
+      }
+
+      .right-container {
+        text-align: center;
+        position: relative;
+        z-index: 1;
+      }
+      .right-container h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        line-height: 1.2;
+      }
+      .right-container p {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.7;
+      }
+
+      .register-form {
+        width: 100%;
+        max-width: 360px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        animation: fadeUp 0.7s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+
+      .register-form h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+      }
+
+      .fw-bold {
+        font-weight: 700;
+      }
+
+      .input-box {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .input-box label {
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .input-box input {
+        width: 100%;
+        padding: 10px 44px 10px 18px;
+        background: var(--input-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        outline: none;
+        transition:
+          border-color var(--transition),
+          background var(--transition),
+          box-shadow var(--transition);
+      }
+
+      .input-box input::placeholder {
+        color: rgba(240, 238, 255, 0.28);
+      }
+
+      .input-box input:focus {
+        border-color: var(--accent);
+        background: rgba(124, 106, 255, 0.1);
+        box-shadow: 0 0 0 3px rgba(124, 106, 255, 0.18);
+      }
+
+      /* ── Validation dynamique ── */
+      .input-hint {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 7px 12px;
+        background: rgba(124, 106, 255, 0.07);
+        border: 1px solid rgba(124, 106, 255, 0.18);
+        border-radius: 10px;
+      }
+
+      .rule {
+        font-size: 0.76rem;
+        line-height: 1.5;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--text-muted);
+        transition: color 0.25s ease;
+      }
+
+      .rule .icon {
+        font-style: normal;
+        font-size: 0.8rem;
+        width: 14px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      /* Neutre : point violet */
+      .rule .icon {
+        color: var(--accent-glow);
+      }
+      .rule .icon::before {
+        content: "•";
+      }
+
+      /* Valide : vert */
+      .rule.valid {
+        color: #6ee7b7;
+      }
+      .rule.valid .icon {
+        color: #6ee7b7;
+      }
+      .rule.valid .icon::before {
+        content: "✓";
+      }
+
+      /* Invalide : rouge */
+      .rule.invalid {
+        color: #f87171;
+      }
+      .rule.invalid .icon {
+        color: #f87171;
+      }
+      .rule.invalid .icon::before {
+        content: "✗";
+      }
+
+      /* ── Bouton œil ── */
+      .toggle-pwd {
+        position: absolute;
+        right: 14px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition);
+        outline: none;
+        line-height: 1;
+      }
+      .toggle-pwd:hover {
+        color: var(--accent-glow);
+      }
+      .toggle-pwd svg {
+        width: 18px;
+        height: 18px;
+        pointer-events: none;
+      }
+      .toggle-pwd .icon-hide {
+        display: none;
+      }
+      .toggle-pwd .icon-show {
+        display: block;
+      }
+      .toggle-pwd.visible .icon-hide {
+        display: block;
+      }
+      .toggle-pwd.visible .icon-show {
+        display: none;
+      }
+
+      /* ── Bouton submit ── */
+      .btn {
+        width: 100%;
+        padding: 11px;
+        background: linear-gradient(135deg, var(--accent) 0%, #5b48e0 100%);
+        color: #fff;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform var(--transition),
+          box-shadow var(--transition),
+          filter var(--transition);
+        box-shadow: 0 4px 20px rgba(124, 106, 255, 0.35);
+      }
+      .btn::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+        opacity: 0;
+        transition: opacity var(--transition);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(124, 106, 255, 0.5);
+        filter: brightness(1.1);
+      }
+      .btn:hover::after {
+        opacity: 1;
+      }
+      .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 16px rgba(124, 106, 255, 0.3);
+      }
+
+      .toogle-text {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        text-align: center;
+      }
+      .toogle-text a {
+        color: var(--accent-glow);
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 5px;
+        transition: color var(--transition);
+        position: relative;
+      }
+      .toogle-text a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -1px;
+        width: 0;
+        height: 1px;
+        background: var(--accent-glow);
+        transition: width var(--transition);
+      }
+      .toogle-text a:hover {
+        color: #fff;
+      }
+      .toogle-text a:hover::after {
+        width: 100%;
+      }
+
+      @media (max-width: 700px) {
+        .glass-container {
+          flex-direction: column;
+        }
+        .right {
+          width: 100%;
+          border-left: none;
+          border-top: 1px solid var(--glass-border);
+          padding: 24px 28px;
+        }
+        .left {
+          padding: 28px 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glass-container">
+      <div class="left">
+        <form
+          class="register-form"
+          method="post"
+          action="{% url 'inscription' %}"
+        >
+          {% csrf_token %}
+          <h2 class="fw-bold">Inscription</h2>
+
+          <div class="input-box">
+            <label>Nom d'utilisateur</label>
+            {{ form.username }}
+          </div>
+
+          <div class="input-box">
+            <label>Email</label>
+            {{ form.email }}
+          </div>
+
+          <!-- Mot de passe avec bouton œil + validation dynamique -->
+          <div class="input-box">
+            <label>Mot de passe</label>
+            <div class="input-wrapper">
+              {{ form.password1 }}
+              <button
+                type="button"
+                class="toggle-pwd"
+                onclick="togglePassword(this)"
+                aria-label="Afficher le mot de passe"
+              >
+                <svg
+                  class="icon-show"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg
+                  class="icon-hide"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                  />
+                  <path
+                    d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+                  />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <!-- Règles dynamiques -->
+            <div class="input-hint" id="pwd-rules">
+              <div class="rule" id="rule-length">
+                <i class="icon"></i> Au moins 8 caractères
+              </div>
+              <div class="rule" id="rule-upper">
+                <i class="icon"></i> Au moins une lettre majuscule (A–Z)
+              </div>
+              <div class="rule" id="rule-digit">
+                <i class="icon"></i> Au moins un chiffre (0–9)
+              </div>
+              <div class="rule" id="rule-nonum">
+                <i class="icon"></i> Ne doit pas être entièrement numérique
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirmer mot de passe avec bouton œil -->
+          <div class="input-box">
+            <label>Confirmer le mot de passe</label>
+            <div class="input-wrapper">
+              {{ form.password2 }}
+              <button
+                type="button"
+                class="toggle-pwd"
+                onclick="togglePassword(this)"
+                aria-label="Afficher le mot de passe"
+              >
+                <svg
+                  class="icon-show"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg
+                  class="icon-hide"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                  />
+                  <path
+                    d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+                  />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn" type="submit">S'inscrire</button>
+
+          <p class="toogle-text">
+            Vous avez déjà un compte ?
+            <a href="{% url 'connexion' %}">Connectez-vous</a>
+          </p>
+        </form>
+      </div>
+
+      <div class="right">
+        <div class="right-container">
+          <h2>Rejoignez-nous</h2>
+          <p>Créez votre compte et commencez l'aventure</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── Applique width 100% aux inputs Django ──
+      document.querySelectorAll(".input-wrapper input").forEach((input) => {
+        input.style.width = "100%";
+      });
+
+      // ── Bouton œil ──
+      function togglePassword(btn) {
+        const wrapper = btn.closest(".input-wrapper");
+        const input = wrapper.querySelector("input");
+        if (input.type === "password") {
+          input.type = "text";
+          btn.classList.add("visible");
+          btn.setAttribute("aria-label", "Masquer le mot de passe");
+        } else {
+          input.type = "password";
+          btn.classList.remove("visible");
+          btn.setAttribute("aria-label", "Afficher le mot de passe");
+        }
+      }
+
+      // ── Validation dynamique en temps réel ──
+      function setRule(id, valid) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove("valid", "invalid");
+        el.classList.add(valid ? "valid" : "invalid");
+      }
+
+      function validatePassword(value) {
+        const hasLength = value.length >= 8;
+        const hasUpper = /[A-Z]/.test(value);
+        const hasDigit = /[0-9]/.test(value);
+        const notAllNum = !/^\d+$/.test(value);
+
+        setRule("rule-length", hasLength);
+        setRule("rule-upper", hasUpper);
+        setRule("rule-digit", hasDigit);
+        setRule("rule-nonum", notAllNum);
+      }
+
+      // Attacher sur l'input password1 de Django (généré avec name="password1")
+      document.addEventListener("DOMContentLoaded", () => {
+        // Django génère un input avec name="password1" ou id="id_password1"
+        const pwdInput =
+          document.getElementById("id_password1") ||
+          document.querySelector('input[name="password1"]') ||
+          document
+            .querySelector("#pwd-rules")
+            ?.closest(".input-box")
+            ?.querySelector("input");
+
+        if (pwdInput) {
+          pwdInput.addEventListener("input", (e) => {
+            if (e.target.value.length > 0) {
+              validatePassword(e.target.value);
+            } else {
+              // Réinitialiser si le champ est vide
+              ["rule-length", "rule-upper", "rule-digit", "rule-nonum"].forEach(
+                (id) => {
+                  const el = document.getElementById(id);
+                  if (el) el.classList.remove("valid", "invalid");
+                },
+              );
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

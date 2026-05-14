@@ -1,0 +1,443 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<style>
+  .card-type {
+    border: none;
+    border-radius: 15px;
+    padding: 22px 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    cursor: pointer;
+    background: white;
+  }
+  .card-type:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 7px 18px;
+    border-radius: 20px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    color: #555;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .filter-btn:hover {
+    border-color: #e65c00;
+    color: #e65c00;
+  }
+  .filter-btn.active {
+    background: linear-gradient(135deg, #e65c00, #f9d423);
+    border-color: transparent;
+    color: white;
+  }
+  .periode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff8f0;
+    border: 1.5px solid #f9d423;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    color: #b84d00;
+    font-weight: 600;
+  }
+  .periode-badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e65c00;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .btn-print {
+    padding: 7px 18px;
+    border-radius: 20px;
+    border: none;
+    background: #1a1a2e;
+    color: white;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-print:hover {
+    background: #2d2d4e;
+    transform: translateY(-1px);
+  }
+  .table-wrapper {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+  .table-wrapper table {
+    margin: 0;
+  }
+  .table-wrapper thead th {
+    background: #f8f9fa;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    border-bottom: 2px solid #f0f0f0;
+    padding: 14px 16px;
+  }
+  .table-wrapper tbody td {
+    padding: 13px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f8f8f8;
+    font-size: 0.88rem;
+  }
+  .table-wrapper tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .table-wrapper tbody tr:hover td {
+    background: #fffbf7;
+  }
+  .badge-type {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-alim {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  .badge-mat {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+  .stock-ok {
+    color: #2e7d32;
+    font-weight: 700;
+  }
+  .stock-warn {
+    color: #e65c00;
+    font-weight: 700;
+  }
+  .stock-danger {
+    color: #c62828;
+    font-weight: 700;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #aaa;
+  }
+  .empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+  }
+  @media print {
+    body * { visibility: hidden; }
+    #zone-impression, #zone-impression * { visibility: visible; }
+    #zone-impression { position: fixed; top: 0; left: 0; width: 100%; }
+    .no-print { display: none !important; }
+  }
+</style>
+
+<!-- EN-TÊTE PAGE -->
+<div
+  class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
+>
+  <div>
+    <h1 class="fw-bold mb-0">📦 Produits</h1>
+    <p class="text-muted mb-0">Gérez votre catalogue de produits</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap no-print">
+    <a href="{% url 'scanner_produit' %}" class="btn btn-sm fw-bold"
+      style="background:#16a34a;color:white;border-radius:20px;padding:8px 18px;">
+      <i class="bi bi-upc-scan me-1"></i>Scanner
+    </a>
+    <a href="{% url 'ajouter_produit' 'alimentaire' %}" class="btn btn-sm fw-bold"
+      style="background:linear-gradient(135deg,#e65c00,#f9d423);color:white;border-radius:20px;padding:8px 18px;">
+      + Alimentaire
+    </a>
+    <a href="{% url 'ajouter_produit' 'non_alimentaire' %}" class="btn btn-sm fw-bold"
+      style="background:#1a1a2e;color:white;border-radius:20px;padding:8px 18px;">
+      + Matériel
+    </a>
+  </div>
+</div>
+
+<!-- CARTES TYPE -->
+<div class="row g-3 mb-4 no-print">
+  <div class="col-12 col-md-6">
+    <a
+      href="{% url 'ajouter_produit' 'alimentaire' %}"
+      class="text-decoration-none"
+    >
+      <div class="card-type">
+        <div>
+          <h5 class="fw-bold mb-1">Alimentation</h5>
+          <small class="text-muted">Ajouter un produit alimentaire</small>
+        </div>
+        <img
+          src="{% static 'comptes/images/aliment.png' %}"
+          width="90"
+          height="65"
+          alt="alimentaire"
+        />
+      </div>
+    </a>
+  </div>
+  <div class="col-12 col-md-6">
+    <a
+      href="{% url 'ajouter_produit' 'non_alimentaire' %}"
+      class="text-decoration-none"
+    >
+      <div class="card-type">
+        <div>
+          <h5 class="fw-bold mb-1">Matériel</h5>
+          <small class="text-muted">Ajouter un produit non alimentaire</small>
+        </div>
+        <img
+          src="{% static 'comptes/images/note.png' %}"
+          width="90"
+          height="65"
+          alt="materiel"
+        />
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- FILTRES + SEARCH + BOUTON IMPRIMER -->
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 no-print">
+  <form method="get" class="d-flex align-items-center flex-wrap gap-2" style="margin:0;" id="form-filtres">
+    <span class="text-muted fw-semibold" style="font-size:0.85rem;">Filtrer :</span>
+
+    <select name="annee" onchange="this.form.submit()"
+      style="padding:7px 14px;border-radius:20px;border:2px solid #e0e0e0;background:white;color:#555;font-weight:600;font-size:0.82rem;cursor:pointer;outline:none;">
+      <option value="">Toutes les années</option>
+      {% for a in annees_dispo %}
+      <option value="{{ a }}" {% if filtre_annee == a|stringformat:"s" %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="mois" onchange="this.form.submit()"
+      style="padding:7px 14px;border-radius:20px;border:2px solid #e0e0e0;background:white;color:#555;font-weight:600;font-size:0.82rem;cursor:pointer;outline:none;">
+      <option value="">Tous les mois</option>
+      {% for i in "123456789" %}{% endfor %}
+      <option value="1"  {% if filtre_mois == "1"  %}selected{% endif %}>Janvier</option>
+      <option value="2"  {% if filtre_mois == "2"  %}selected{% endif %}>Février</option>
+      <option value="3"  {% if filtre_mois == "3"  %}selected{% endif %}>Mars</option>
+      <option value="4"  {% if filtre_mois == "4"  %}selected{% endif %}>Avril</option>
+      <option value="5"  {% if filtre_mois == "5"  %}selected{% endif %}>Mai</option>
+      <option value="6"  {% if filtre_mois == "6"  %}selected{% endif %}>Juin</option>
+      <option value="7"  {% if filtre_mois == "7"  %}selected{% endif %}>Juillet</option>
+      <option value="8"  {% if filtre_mois == "8"  %}selected{% endif %}>Août</option>
+      <option value="9"  {% if filtre_mois == "9"  %}selected{% endif %}>Septembre</option>
+      <option value="10" {% if filtre_mois == "10" %}selected{% endif %}>Octobre</option>
+      <option value="11" {% if filtre_mois == "11" %}selected{% endif %}>Novembre</option>
+      <option value="12" {% if filtre_mois == "12" %}selected{% endif %}>Décembre</option>
+    </select>
+
+    {% if filtre_annee or filtre_mois %}
+    <a href="{% url 'produit' %}" style="padding:7px 14px;border-radius:20px;border:2px solid #e0e0e0;background:white;color:#888;font-weight:600;font-size:0.82rem;text-decoration:none;">
+      ✕ Réinitialiser
+    </a>
+    {% endif %}
+
+    <a href="{% url 'corbeille_produits' %}" style="padding:7px 14px;border-radius:20px;border:2px solid #dc2626;background:white;color:#dc2626;font-weight:600;font-size:0.82rem;text-decoration:none;">
+      <i class="bi bi-trash me-1"></i>Corbeille
+    </a>
+  </form>
+
+  <div class="d-flex gap-2 align-items-center">
+    <form method="get" class="d-flex gap-2 align-items-center" style="margin:0">
+      {% if filtre_annee %}<input type="hidden" name="annee" value="{{ filtre_annee }}">{% endif %}
+      {% if filtre_mois %}<input type="hidden" name="mois" value="{{ filtre_mois }}">{% endif %}
+      <div style="display:flex;align-items:center;background:white;border:1.5px solid #e0e0e0;border-radius:20px;padding:5px 14px;gap:8px;min-width:220px;">
+        <i class="bi bi-search" style="color:#aaa;font-size:14px;flex-shrink:0;"></i>
+        <input type="text" name="q" value="{{ search }}" placeholder="Rechercher un produit..." style="border:none;outline:none;font-size:0.83rem;background:transparent;width:100%;">
+      </div>
+      <button type="submit" class="btn-print" style="padding:7px 14px;">Rechercher</button>
+    </form>
+    <button class="btn-print" onclick="imprimerProduits()"><i class="bi bi-printer me-1"></i>Imprimer</button>
+  </div>
+</div>
+
+{% if filtre_annee or filtre_mois %}
+<div class="mb-3 no-print">
+  <span class="periode-badge">
+    <span class="dot"></span>
+    {% if filtre_annee %}Année {{ filtre_annee }}{% endif %}
+    {% if filtre_annee and filtre_mois %} — {% endif %}
+    {% if filtre_mois %}{{ mois_fr|slice:filtre_mois }}{% endif %}
+    — <strong>{{ produits|length }} produit{{ produits|length|pluralize }}</strong>
+  </span>
+</div>
+{% endif %}
+
+<!-- TABLEAU PRODUITS -->
+<div id="zone-impression" class="print-zone">
+  <!-- EN-TÊTE IMPRESSION -->
+  <div id="entete-impression" style="display:none;">
+    <div class="print-header">
+      <div>
+        <div class="print-company-name" id="print-nom-entreprise">FITSTOCK</div>
+        <div class="print-company-sub" id="print-adresse-entreprise">Système de gestion de stock</div>
+        <div class="print-company-sub" id="print-tel-entreprise"></div>
+      </div>
+      <div>
+        <div class="print-doc-title">LISTE DES PRODUITS</div>
+        <div class="print-doc-meta">
+          Imprimé le : <span id="date-impression"></span><br>
+          Période :
+          {% if filtre_annee %}{{ filtre_annee }}{% else %}Toutes années{% endif %}
+          {% if filtre_mois %} — Mois {{ filtre_mois }}{% endif %}<br>
+          Total : {{ produits|length }} produit{{ produits|length|pluralize }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    {% if produits %}
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Code</th>
+          <th>Nom</th>
+          <th>Type</th>
+          <th>Famille</th>
+          <th>Prix unitaire</th>
+          <th>Stock</th>
+          <th class="no-print">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in produits %}
+        <tr>
+          <td class="text-muted">{{forloop.counter}}</td>
+          <td><code style="font-size:0.78rem;background:#f3f4f6;padding:2px 7px;border-radius:6px;">{{p.code_produit}}</code></td>
+          <td><strong>{{p.nom}}</strong></td>
+          <td>
+            {% if p.type == 'alimentaire' %}<span class="badge-type badge-alim"
+              >🥗 Alimentaire</span
+            >
+            {% else %}<span class="badge-type badge-mat">🔧 Matériel</span>
+            {% endif %}
+          </td>
+          <td>{{p.famille.nom|default:"—"}}</td>
+          <td>{{p.prix|default:"—"}} FCFA</td>
+          <td>
+            {% if p.quantite <= 0 %}<span class="stock-danger"
+              >{{p.quantite}} ⚠️</span
+            >
+            {% elif p.seuil_alerte and p.quantite <= p.seuil_alerte %}<span
+              class="stock-warn"
+              >{{p.quantite}} ⚡</span
+            >
+            {% else %}<span class="stock-ok">{{p.quantite}} ✓</span>
+            {% endif %}
+          </td>
+          <td>{{p.seuil_alerte|default:"—"}}</td>
+          <td class="no-print">
+            <a href="{% url 'ajouter_produit' p.type %}?modifier={{p.pk}}"
+              class="btn btn-sm btn-outline-warning" style="border-radius:8px;font-size:0.75rem">✏️</a>
+            <button class="btn btn-sm btn-outline-danger ms-1" style="border-radius:8px;font-size:0.75rem"
+              data-pk="{{p.pk}}" data-nom="{{p.nom}}" onclick="ouvrirModalSuppr(this)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">📦</div>
+      <p class="fw-semibold">Aucun produit trouvé</p>
+      <p class="text-muted" style="font-size: 0.85rem">
+        {% if filtre != 'tout' %}Aucun produit ajouté sur cette période.{% else
+        %}Commencez par ajouter votre premier produit.{% endif %}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div id="pied-impression" style="display:none;">
+    <div class="print-footer">
+      <span>{{ request.user.nom_entreprise|default:"Fitstock" }} — Système de gestion de stock</span>
+      <span>Total : {{ produits|length }} produit{{ produits|length|pluralize }}</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const nomEntreprise     = "{{ request.user.nom_entreprise|default:'FITSTOCK' }}";
+  const adresseEntreprise = "{{ request.user.adresse_entreprise|default:'Système de gestion de stock' }}";
+  const telEntreprise     = "{{ request.user.telephone_entreprise }}";
+
+  function imprimerProduits() {
+    document.getElementById("date-impression").textContent =
+      new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+    document.getElementById("print-nom-entreprise").textContent = nomEntreprise.toUpperCase();
+    document.getElementById("print-adresse-entreprise").textContent = adresseEntreprise;
+    if (telEntreprise) document.getElementById("print-tel-entreprise").textContent = "Tél : " + telEntreprise;
+    document.getElementById("entete-impression").style.display = "block";
+    document.getElementById("pied-impression").style.display = "block";
+    window.print();
+    setTimeout(function () {
+      document.getElementById("entete-impression").style.display = "none";
+      document.getElementById("pied-impression").style.display = "none";
+    }, 1000);
+  }
+
+  function ouvrirModalSuppr(btn) {
+    document.getElementById("suppr-nom").textContent = btn.dataset.nom;
+    document.getElementById("form-suppr-produit").action = "/produit/supprimer/" + btn.dataset.pk + "/";
+    document.getElementById("modal-suppr-produit").style.display = "flex";
+  }
+</script>
+
+<!-- Modal suppression produit -->
+<div id="modal-suppr-produit" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:14px;padding:2rem;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <i class="bi bi-exclamation-triangle-fill" style="font-size:2.5rem;color:#dc2626;"></i>
+    <h5 class="fw-bold mt-3 mb-1">Supprimer le produit</h5>
+    <p class="text-muted mb-3" style="font-size:0.9rem;">
+      "<strong id="suppr-nom"></strong>" sera déplacé dans la corbeille.
+    </p>
+    <form method="post" id="form-suppr-produit">
+      {% csrf_token %}
+      <div class="d-flex justify-content-center gap-2">
+        <button type="button" onclick="document.getElementById('modal-suppr-produit').style.display='none'"
+          style="padding:8px 20px;border-radius:8px;border:1.5px solid #e0e0e0;background:white;font-weight:600;cursor:pointer;">
+          Annuler
+        </button>
+        <button type="submit"
+          style="padding:8px 20px;border-radius:8px;border:none;background:#dc2626;color:white;font-weight:700;cursor:pointer;">
+          <i class="bi bi-trash me-1"></i>Supprimer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

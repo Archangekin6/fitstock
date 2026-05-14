@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg-deep: #0d0d1a;
+        --bg-mid: #12122b;
+        --accent: #7c6aff;
+        --accent-glow: #a594ff;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.12);
+        --text-primary: #f0eeff;
+        --text-muted: rgba(240, 238, 255, 0.5);
+        --input-bg: rgba(255, 255, 255, 0.07);
+        --radius: 20px;
+        --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "DM Sans", sans-serif;
+        font-weight: 400;
+        background-color: var(--bg-deep);
+        background-image:
+          radial-gradient(
+            ellipse 80% 60% at 20% 10%,
+            rgba(124, 106, 255, 0.25) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 50% at 80% 90%,
+            rgba(100, 60, 200, 0.2) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 60% 40%,
+            rgba(60, 40, 160, 0.15) 0%,
+            transparent 50%
+          );
+        color: var(--text-primary);
+        overflow: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: 0;
+        animation: float 8s ease-in-out infinite alternate;
+      }
+      body::before {
+        width: 500px;
+        height: 500px;
+        background: rgba(124, 106, 255, 0.12);
+        top: -100px;
+        left: -100px;
+      }
+      body::after {
+        width: 400px;
+        height: 400px;
+        background: rgba(90, 50, 200, 0.1);
+        bottom: -80px;
+        right: -80px;
+        animation-delay: -4s;
+      }
+
+      @keyframes float {
+        from {
+          transform: translate(0, 0) scale(1);
+        }
+        to {
+          transform: translate(40px, 30px) scale(1.08);
+        }
+      }
+
+      .glass-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        width: min(900px, 95vw);
+        min-height: 520px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px) saturate(1.4);
+        -webkit-backdrop-filter: blur(24px) saturate(1.4);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius);
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.04),
+          0 32px 80px rgba(0, 0, 0, 0.5),
+          0 0 60px rgba(124, 106, 255, 0.08);
+        overflow: hidden;
+        animation: fadeUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(28px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .left {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 56px 48px;
+      }
+
+      .right {
+        width: 340px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 40px;
+        background: linear-gradient(
+          145deg,
+          rgba(124, 106, 255, 0.18) 0%,
+          rgba(80, 50, 200, 0.25) 100%
+        );
+        border-left: 1px solid var(--glass-border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .right::before {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(124, 106, 255, 0.25) 0%,
+          transparent 70%
+        );
+        top: -60px;
+        right: -60px;
+        pointer-events: none;
+      }
+
+      .right-container {
+        text-align: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .right-container h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        line-height: 1.2;
+      }
+
+      .right-container p {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.7;
+      }
+
+      .register-form {
+        width: 100%;
+        max-width: 360px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        animation: fadeUp 0.7s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
+      }
+
+      .register-form h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+      }
+
+      .fw-bold {
+        font-weight: 700;
+      }
+
+      .input-box {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .input-box label {
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      /* ── Wrapper pour input + bouton œil ── */
+      .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .input-box input {
+        width: 100%;
+        padding: 13px 44px 13px 18px;
+        background: var(--input-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        outline: none;
+        transition:
+          border-color var(--transition),
+          background var(--transition),
+          box-shadow var(--transition);
+      }
+
+      .input-box input::placeholder {
+        color: rgba(240, 238, 255, 0.28);
+      }
+
+      .input-box input:focus {
+        border-color: var(--accent);
+        background: rgba(124, 106, 255, 0.1);
+        box-shadow: 0 0 0 3px rgba(124, 106, 255, 0.18);
+      }
+
+      /* ── Bouton œil ── */
+      .toggle-pwd {
+        position: absolute;
+        right: 14px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition);
+        outline: none;
+        line-height: 1;
+      }
+
+      .toggle-pwd:hover {
+        color: var(--accent-glow);
+      }
+
+      .toggle-pwd svg {
+        width: 18px;
+        height: 18px;
+        pointer-events: none;
+      }
+
+      .toggle-pwd .icon-hide {
+        display: none;
+      }
+      .toggle-pwd .icon-show {
+        display: block;
+      }
+      .toggle-pwd.visible .icon-hide {
+        display: block;
+      }
+      .toggle-pwd.visible .icon-show {
+        display: none;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--accent) 0%, #5b48e0 100%);
+        color: #fff;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform var(--transition),
+          box-shadow var(--transition),
+          filter var(--transition);
+        box-shadow: 0 4px 20px rgba(124, 106, 255, 0.35);
+      }
+
+      .btn::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+        opacity: 0;
+        transition: opacity var(--transition);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(124, 106, 255, 0.5);
+        filter: brightness(1.1);
+      }
+      .btn:hover::after {
+        opacity: 1;
+      }
+      .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 16px rgba(124, 106, 255, 0.3);
+      }
+
+      .toogle-text {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      .toogle-text a {
+        color: var(--accent-glow);
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 5px;
+        transition: color var(--transition);
+        position: relative;
+      }
+
+      .toogle-text a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -1px;
+        width: 0;
+        height: 1px;
+        background: var(--accent-glow);
+        transition: width var(--transition);
+      }
+
+      .toogle-text a:hover {
+        color: #fff;
+      }
+      .toogle-text a:hover::after {
+        width: 100%;
+      }
+
+      @media (max-width: 700px) {
+        .glass-container {
+          flex-direction: column;
+          min-height: unset;
+        }
+        .right {
+          width: 100%;
+          border-left: none;
+          border-top: 1px solid var(--glass-border);
+          padding: 36px 32px;
+        }
+        .left {
+          padding: 40px 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glass-container">
+      <div class="left">
+        <form
+          class="register-form"
+          method="post"
+          action="{% url 'connexion' %}"
+        >
+          {% csrf_token %}
+          <h2 class="fw-bold">Connexion</h2>
+
+          <div class="input-box">
+            <label>Nom d'utilisateur</label>
+            {{ form.username }}
+          </div>
+
+          <!-- Mot de passe avec bouton œil -->
+          <div class="input-box">
+            <label>Mot de passe</label>
+            <div class="input-wrapper">
+              {{ form.password }}
+              <button
+                type="button"
+                class="toggle-pwd"
+                onclick="togglePassword(this)"
+                aria-label="Afficher le mot de passe"
+              >
+                <!-- Œil ouvert (mot de passe masqué) -->
+                <svg
+                  class="icon-show"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <!-- Œil barré (mot de passe visible) -->
+                <svg
+                  class="icon-hide"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
+                  />
+                  <path
+                    d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
+                  />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {% if form.errors %}
+          <p style="color: salmon">Identifiants incorrects.</p>
+          {% endif %}
+
+          <button class="btn" type="submit">Connexion</button>
+
+          <p class="toogle-text">
+            Vous n'avez pas de compte ?
+            <a href="{% url 'inscription' %}">S'inscrire</a>
+          </p>
+        </form>
+      </div>
+
+      <div class="right">
+        <div class="right-container">
+          <h2>Bienvenue</h2>
+          <p>Cher utilisateur, veuillez vous connecter</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function togglePassword(btn) {
+        const wrapper = btn.closest(".input-wrapper");
+        const input = wrapper.querySelector("input");
+
+        if (input.type === "password") {
+          input.type = "text";
+          btn.classList.add("visible");
+          btn.setAttribute("aria-label", "Masquer le mot de passe");
+        } else {
+          input.type = "password";
+          btn.classList.remove("visible");
+          btn.setAttribute("aria-label", "Afficher le mot de passe");
+        }
+      }
+    </script>
+  </body>
+</html>

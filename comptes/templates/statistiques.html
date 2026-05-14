@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .stat-card {
+    background: white; border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 22px 26px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .stat-card h4 { font-size: 13px; font-weight: 500; color: #888; margin-bottom: 6px; }
+  .stat-card h3 { font-size: 26px; font-weight: 800; color: #1a1a1a; margin: 0; }
+  .stat-card .icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .panel { background: white; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
+    font-size: 13px; font-weight: 700; color: #1a1a1a;
+  }
+  .panel-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+  .rank-table { width: 100%; border-collapse: collapse; }
+  .rank-table td { padding: 11px 20px; font-size: 13px; border-bottom: 1px solid #f5f5f5; vertical-align: middle; }
+  .rank-table tr:last-child td { border-bottom: none; }
+  .rank-table tr:hover td { background: #fafafa; }
+  .rank-num { width: 28px; height: 28px; border-radius: 8px; background: #f3f4f6; color: #888; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .rank-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .rank-bar { flex: 1; height: 6px; border-radius: 99px; background: #f0f0f0; overflow: hidden; }
+  .rank-bar-fill { height: 100%; border-radius: 99px; }
+  .filter-sel {
+    padding: 7px 14px; border-radius: 20px; border: 2px solid #e0e0e0;
+    background: white; color: #555; font-weight: 600; font-size: 0.82rem;
+    cursor: pointer; outline: none;
+  }
+  .bilan-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .bilan-item { flex: 1; min-width: 160px; background: #f8f9fa; border-radius: 12px; padding: 16px 20px; }
+  .bilan-item .label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #aaa; margin-bottom: 6px; }
+  .bilan-item .val { font-size: 20px; font-weight: 800; }
+</style>
+
+<!-- Header + filtres -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+  <div>
+    <h1 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2" style="color:#e65c00;"></i>Statistiques</h1>
+    <p class="text-muted mb-0" style="font-size:13px;">Analyse complète de votre activité</p>
+  </div>
+  <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+    <select name="annee" class="filter-sel" onchange="this.form.submit()">
+      {% for a in annees %}
+      <option value="{{ a }}" {% if a == annee_sel %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+    <select name="mois" class="filter-sel" onchange="this.form.submit()">
+      <option value="0" {% if mois_sel == 0 %}selected{% endif %}>Toute l'année</option>
+      <option value="1"  {% if mois_sel == 1  %}selected{% endif %}>Janvier</option>
+      <option value="2"  {% if mois_sel == 2  %}selected{% endif %}>Février</option>
+      <option value="3"  {% if mois_sel == 3  %}selected{% endif %}>Mars</option>
+      <option value="4"  {% if mois_sel == 4  %}selected{% endif %}>Avril</option>
+      <option value="5"  {% if mois_sel == 5  %}selected{% endif %}>Mai</option>
+      <option value="6"  {% if mois_sel == 6  %}selected{% endif %}>Juin</option>
+      <option value="7"  {% if mois_sel == 7  %}selected{% endif %}>Juillet</option>
+      <option value="8"  {% if mois_sel == 8  %}selected{% endif %}>Août</option>
+      <option value="9"  {% if mois_sel == 9  %}selected{% endif %}>Septembre</option>
+      <option value="10" {% if mois_sel == 10 %}selected{% endif %}>Octobre</option>
+      <option value="11" {% if mois_sel == 11 %}selected{% endif %}>Novembre</option>
+      <option value="12" {% if mois_sel == 12 %}selected{% endif %}>Décembre</option>
+    </select>
+  </form>
+</div>
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div>
+        <h4>Produits actifs</h4>
+        <h3>{{ total_produits|intcomma }}</h3>
+      </div>
+      <div class="icon" style="background:#fff3e0;color:#e65c00;"><i class="bi bi-box-seam"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div>
+        <h4>Valeur du stock</h4>
+        <h3 style="font-size:20px;">{{ valeur_stock|floatformat:0|intcomma }} F</h3>
+      </div>
+      <div class="icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-currency-dollar"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div>
+        <h4>Entrées (qté)</h4>
+        <h3 style="color:#16a34a;">+{{ total_entrees_qte|intcomma }}</h3>
+      </div>
+      <div class="icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-arrow-down-circle"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div>
+        <h4>Sorties (qté)</h4>
+        <h3 style="color:#dc2626;">-{{ total_sorties_qte|intcomma }}</h3>
+      </div>
+      <div class="icon" style="background:#fef2f2;color:#dc2626;"><i class="bi bi-arrow-up-circle"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bilan financier -->
+<div class="mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span><span class="panel-dot" style="background:#e65c00;"></span>Bilan financier — {{ annee_sel }}</span>
+    </div>
+    <div style="padding:20px;">
+      <div class="bilan-row">
+        <div class="bilan-item">
+          <div class="label">Valeur stock actuel</div>
+          <div class="val" style="color:#1a1a1a;">{{ valeur_stock|floatformat:0|intcomma }} FCFA</div>
+        </div>
+        <div class="bilan-item">
+          <div class="label">Total achats (entrées)</div>
+          <div class="val" style="color:#e65c00;">{{ total_entrees_val|floatformat:0|intcomma }} FCFA</div>
+        </div>
+        <div class="bilan-item">
+          <div class="label">Produits en rupture</div>
+          <div class="val" style="color:#dc2626;">{{ produits_rupture }}</div>
+        </div>
+        <div class="bilan-item">
+          <div class="label">Rotation (entrées - sorties)</div>
+          <div class="val" style="color:{% if total_entrees_qte >= total_sorties_qte %}#16a34a{% else %}#dc2626{% endif %};">
+            {% if total_entrees_qte >= total_sorties_qte %}+{% endif %}{{ total_entrees_qte|add:"-"|add:total_sorties_qte|default:"0" }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Graphe mouvements annuels -->
+<div class="mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span><span class="panel-dot" style="background:#e65c00;"></span>Mouvements mensuels — {{ annee_sel }}</span>
+      <span style="font-size:11px;color:#bbb;">Entrées & sorties par mois</span>
+    </div>
+    <div style="padding:20px;height:280px;position:relative;">
+      <canvas id="chartMouvements"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Graphe achats mensuels -->
+<div class="mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span><span class="panel-dot" style="background:#f59e0b;"></span>Valeur des achats par mois — {{ annee_sel }}</span>
+    </div>
+    <div style="padding:20px;height:240px;position:relative;">
+      <canvas id="chartBilan"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Top produits + Répartition -->
+<div class="row g-4 mb-4">
+
+  <!-- Top sorties -->
+  <div class="col-12 col-lg-4">
+    <div class="panel">
+      <div class="panel-header">
+        <span><span class="panel-dot" style="background:#dc2626;"></span>Top 5 — Plus sortis</span>
+      </div>
+      <table class="rank-table">
+        {% for p in top_sorties %}
+        <tr>
+          <td style="width:40px;"><div class="rank-num">{{ forloop.counter }}</div></td>
+          <td><strong>{{ p.produit__nom|truncatechars:22 }}</strong></td>
+          <td style="text-align:right;color:#dc2626;font-weight:700;">{{ p.total }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="text-align:center;color:#bbb;padding:20px;">Aucune donnée</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <!-- Top entrées -->
+  <div class="col-12 col-lg-4">
+    <div class="panel">
+      <div class="panel-header">
+        <span><span class="panel-dot" style="background:#16a34a;"></span>Top 5 — Plus entrés</span>
+      </div>
+      <table class="rank-table">
+        {% for p in top_entrees %}
+        <tr>
+          <td style="width:40px;"><div class="rank-num">{{ forloop.counter }}</div></td>
+          <td><strong>{{ p.produit__nom|truncatechars:22 }}</strong></td>
+          <td style="text-align:right;color:#16a34a;font-weight:700;">+{{ p.total }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="text-align:center;color:#bbb;padding:20px;">Aucune donnée</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <!-- Répartition motifs -->
+  <div class="col-12 col-lg-4">
+    <div class="panel">
+      <div class="panel-header">
+        <span><span class="panel-dot" style="background:#6366f1;"></span>Motifs de sortie</span>
+      </div>
+      <div style="padding:16px;height:220px;position:relative;">
+        <canvas id="chartMotifs"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Répartition stock par famille -->
+<div class="mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span><span class="panel-dot" style="background:#0369a1;"></span>Stock par famille</span>
+    </div>
+    <div style="padding:20px;height:260px;position:relative;">
+      <canvas id="chartFamilles"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = ['#e65c00','#16a34a','#6366f1','#f59e0b','#dc2626','#0369a1','#8b5cf6','#10b981'];
+
+// Mouvements mensuels
+new Chart(document.getElementById('chartMouvements'), {
+  type: 'bar',
+  data: {
+    labels: {{ graph_mois_labels|safe }},
+    datasets: [
+      { label: 'Entrées', data: {{ graph_mois_entrees|safe }}, backgroundColor: 'rgba(22,163,74,0.15)', borderColor: 'rgba(22,163,74,0.9)', borderWidth: 2, borderRadius: 6 },
+      { label: 'Sorties', data: {{ graph_mois_sorties|safe }}, backgroundColor: 'rgba(230,92,0,0.12)', borderColor: 'rgba(230,92,0,0.85)', borderWidth: 2, borderRadius: 6 },
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { backgroundColor: '#1a1a1a', padding: 10, cornerRadius: 10 } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f5f5f5' } } } }
+});
+
+// Bilan achats
+new Chart(document.getElementById('chartBilan'), {
+  type: 'line',
+  data: {
+    labels: {{ bilan_labels|safe }},
+    datasets: [{ label: 'Achats (FCFA)', data: {{ bilan_achats|safe }}, backgroundColor: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.9)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: 'rgba(245,158,11,0.9)' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { backgroundColor: '#1a1a1a', padding: 10, cornerRadius: 10 } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f5f5f5' } } } }
+});
+
+// Motifs (doughnut)
+new Chart(document.getElementById('chartMotifs'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ motifs_labels|safe }},
+    datasets: [{ data: {{ motifs_data|safe }}, backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10 } } }, cutout: '60%' }
+});
+
+// Stock par famille (horizontal bar)
+new Chart(document.getElementById('chartFamilles'), {
+  type: 'bar',
+  data: {
+    labels: {{ familles_labels|safe }},
+    datasets: [{ label: 'Quantité en stock', data: {{ familles_data|safe }}, backgroundColor: COLORS.map(c => c + '33'), borderColor: COLORS, borderWidth: 2, borderRadius: 6 }]
+  },
+  options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1a1a', padding: 10, cornerRadius: 10 } }, scales: { x: { beginAtZero: true, grid: { color: '#f5f5f5' } }, y: { grid: { display: false } } } }
+});
+</script>
+
+{% endblock %}

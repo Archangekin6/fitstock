@@ -1,0 +1,730 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Entree stock –
+Fitstock{% endblock %} {% block content %}
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #fff;
+    --border: #e2e5ea;
+    --primary: #4f46e5;
+    --primary-h: #4338ca;
+    --text: #111827;
+    --muted: #6b7280;
+    --green: #10b981;
+    --green-h: #059669;
+    --red: #ef4444;
+    --red-h: #dc2626;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+  .es-wrapper {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 2.5rem 1rem 4rem;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .es-container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .es-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .es-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .es-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-add {
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .btn-add:hover {
+    background: var(--green-h);
+  }
+
+  /* ── BOUTON IMPRIMER ── */
+  .btn-print {
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .btn-print:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #f5f3ff;
+  }
+
+  .es-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 0.4rem;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .stat-value.green {
+    color: var(--green);
+  }
+
+  .es-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .es-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .es-card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .es-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .es-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    background: #f9fafb;
+    border-bottom: 1px solid var(--border);
+  }
+  .es-table td {
+    padding: 0.9rem 1.25rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .es-table tr:last-child td {
+    border-bottom: none;
+  }
+  .es-table tr:hover td {
+    background: #f9fafb;
+  }
+
+  .badge-produit {
+    background: #ede9fe;
+    color: #5b21b6;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge-lot {
+    background: #f0fdf4;
+    color: #166534;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: monospace;
+  }
+
+  .btn-del-sm {
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    border: 1.5px solid #fecaca;
+    background: transparent;
+    color: var(--red);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-del-sm:hover {
+    background: #fef2f2;
+  }
+
+  .es-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .es-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.5rem 0;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .modal-close:hover {
+    color: var(--text);
+  }
+  .modal-body {
+    padding: 1.5rem;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .fp-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 500px) {
+    .fp-grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+  .fp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .fp-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .fp-label .req {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+  .fp-field .form-control,
+  .fp-field .form-select {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    width: 100%;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .fp-field .form-control:focus,
+  .fp-field .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background: #fff;
+  }
+  textarea.form-control {
+    resize: vertical;
+  }
+  .btn-cancel {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .btn-cancel:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-save {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .btn-save:hover {
+    background: var(--green-h);
+  }
+  .fp-errors {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .fp-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .fp-errors li {
+    font-size: 0.85rem;
+    color: #b91c1c;
+  }
+
+  .modal-del-body {
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  .modal-del-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .modal-del-text {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.5rem 0 1.5rem;
+  }
+  .btn-confirm-del {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--red);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .btn-confirm-del:hover {
+    background: var(--red-h);
+  }
+
+  /* ── STYLES D'IMPRESSION ── */
+  @media print {
+    /* Cacher tout sauf le tableau */
+    body * {
+      visibility: hidden;
+    }
+    #zone-impression,
+    #zone-impression * {
+      visibility: visible;
+    }
+    #zone-impression {
+      position: fixed;
+      inset: 0;
+      padding: 30px 40px;
+      background: white;
+    }
+
+    .print-header {
+      display: flex !important;
+    }
+    .btn-print,
+    .btn-add,
+    .btn-del-sm,
+    .es-header,
+    .es-stats,
+    .es-card-header {
+      display: none !important;
+    }
+
+    .es-table th,
+    .es-table td {
+      font-size: 11px !important;
+      padding: 8px 10px !important;
+    }
+    .es-card {
+      box-shadow: none !important;
+      border: 1px solid #ddd !important;
+    }
+    .badge-produit,
+    .badge-lot {
+      border: 1px solid #ccc !important;
+    }
+  }
+</style>
+
+<div class="es-wrapper">
+  <div class="es-container">
+    <!-- En-tête normale -->
+    <div class="es-header">
+      <div>
+        <h1 class="es-title">Entrees stock</h1>
+        <p class="es-subtitle">Historique de toutes les entrees de produits</p>
+      </div>
+      <div class="header-actions">
+        <!-- Bouton Imprimer -->
+        <button class="btn-print" onclick="imprimerTableau()">
+          🖨️ Imprimer
+        </button>
+        <button
+          class="btn-add"
+          onclick="document.getElementById('modal-ajout').classList.add('open')"
+        >
+          &#43; Nouvelle entree
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="es-stats">
+      <div class="stat-card">
+        <p class="stat-label">Total entrees</p>
+        <p class="stat-value green">{{ entrees.count }}</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Unites entrees</p>
+        <p class="stat-value">{{ entrees|length }}</p>
+      </div>
+    </div>
+
+    <!-- Zone imprimable -->
+    <div id="zone-impression">
+      <!-- En-tête visible uniquement à l'impression -->
+      <div
+        class="print-header"
+        style="
+          display: none;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          padding-bottom: 14px;
+          border-bottom: 2px solid #111;
+        "
+      >
+        <div>
+          <div style="font-size: 20px; font-weight: 800; color: #111">
+            📋 Fitstock
+          </div>
+          <div style="font-size: 12px; color: #666; margin-top: 2px">
+            Historique des entrées de stock
+          </div>
+        </div>
+        <div style="text-align: right; font-size: 11px; color: #888">
+          Imprimé le : <strong id="print-date"></strong>
+        </div>
+      </div>
+
+      <!-- Tableau -->
+      <div class="es-card">
+        <div class="es-card-header">
+          <p class="es-card-title">Historique des entrees</p>
+        </div>
+
+        {% if entrees %}
+        <div style="overflow-x: auto">
+          <table class="es-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Fournisseur</th>
+                <th>Quantite</th>
+                <th>Prix achat</th>
+                <th>N&#176; Lot</th>
+                <th>Date entree</th>
+                <th class="no-print">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in entrees %}
+              <tr>
+                <td><span class="badge-produit">{{ e.produit.nom }}</span></td>
+                <td>{{ e.fournisseur.nom|default:"–" }}</td>
+                <td><strong>+{{ e.quantite }}</strong></td>
+                <td>{{ e.prix_achat }} FCFA</td>
+                <td>
+                  {% if e.numero_lot %}<span class="badge-lot"
+                    >{{ e.numero_lot }}</span
+                  >{% else %}–{% endif %}
+                </td>
+                <td>{{ e.date_entree|date:"d/m/Y" }}</td>
+                <td class="no-print">
+                  <button
+                    class="btn-del-sm"
+                    data-pk="{{ e.pk }}"
+                    data-info="{{ e.produit.nom }} ({{ e.quantite }} unites)"
+                  >
+                    &#128465; Supprimer
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="es-empty">
+          <div class="es-empty-icon">&#128230;</div>
+          <p>Aucune entree enregistree pour le moment.</p>
+          <button
+            class="btn-add"
+            onclick="
+              document.getElementById('modal-ajout').classList.add('open')
+            "
+          >
+            &#43; Enregistrer la premiere entree
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <!-- /zone-impression -->
+  </div>
+</div>
+
+<!-- Modal Ajout -->
+<div class="modal-overlay" id="modal-ajout">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title">Nouvelle entree de stock</h2>
+      <button
+        class="modal-close"
+        onclick="
+          document.getElementById('modal-ajout').classList.remove('open')
+        "
+      >
+        &#10005;
+      </button>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="modal-body">
+        {% if form.errors %}
+        <div class="fp-errors">
+          <ul>
+            {% for field in form %}{% for error in field.errors %}
+            <li><strong>{{ field.label }}</strong> : {{ error }}</li>
+            {% endfor %}{% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.produit.id_for_label }}"
+            >Produit <span class="req">*</span></label
+          >
+          {{ form.produit }}
+        </div>
+        <div class="fp-grid-2">
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.quantite.id_for_label }}"
+              >Quantite <span class="req">*</span></label
+            >
+            {{ form.quantite }}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.prix_achat.id_for_label }}"
+              >Prix d'achat (FCFA) <span class="req">*</span></label
+            >
+            {{ form.prix_achat }}
+          </div>
+        </div>
+        <div class="fp-grid-2">
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.date_entree.id_for_label }}"
+              >Date d'entree <span class="req">*</span></label
+            >
+            {{ form.date_entree }}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.fournisseur.id_for_label }}"
+              >Fournisseur</label
+            >
+            {{ form.fournisseur }}
+          </div>
+        </div>
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.numero_lot.id_for_label }}"
+            >Numero de lot</label
+          >
+          {{ form.numero_lot }}
+        </div>
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.note.id_for_label }}"
+            >Note</label
+          >
+          {{ form.note }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-cancel"
+          onclick="
+            document.getElementById('modal-ajout').classList.remove('open')
+          "
+        >
+          Annuler
+        </button>
+        <button type="submit" class="btn-save">
+          &#43; Enregistrer l'entree
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Suppression -->
+<div class="modal-overlay" id="modal-suppression">
+  <div class="modal-box" style="max-width: 420px">
+    <div class="modal-del-body">
+      <div class="modal-del-icon">&#9888;</div>
+      <h2 class="modal-title">Supprimer l'entree</h2>
+      <p class="modal-del-text">
+        Voulez-vous vraiment supprimer l'entree
+        <strong id="info-entree-del"></strong> ? Le stock du produit sera mis a
+        jour.
+      </p>
+      <form method="post" id="form-suppression" action="">
+        {% csrf_token %}
+        <div style="display: flex; justify-content: center; gap: 0.75rem">
+          <button
+            type="button"
+            class="btn-cancel"
+            onclick="
+              document
+                .getElementById('modal-suppression')
+                .classList.remove('open')
+            "
+          >
+            Annuler
+          </button>
+          <button type="submit" class="btn-confirm-del">Oui, supprimer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Impression ── */
+  function imprimerTableau() {
+    // Mettre la date du jour dans l'en-tête d'impression
+    var now = new Date();
+    var dateStr = now.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    document.getElementById("print-date").textContent = dateStr;
+    window.print();
+  }
+
+  /* ── Reste du JS original ── */
+  window.addEventListener("DOMContentLoaded", function () {
+    if (document.querySelector(".fp-errors")) {
+      document.getElementById("modal-ajout").classList.add("open");
+    }
+    document.querySelectorAll(".btn-del-sm").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var pk = this.getAttribute("data-pk");
+        var info = this.getAttribute("data-info");
+        document.getElementById("info-entree-del").textContent = info;
+        document.getElementById("form-suppression").action =
+          "/entree-stock/supprimer/" + pk + "/";
+        document.getElementById("modal-suppression").classList.add("open");
+      });
+    });
+    document.querySelectorAll(".modal-overlay").forEach(function (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) overlay.classList.remove("open");
+      });
+    });
+  });
+</script>
+
+{% endblock %}

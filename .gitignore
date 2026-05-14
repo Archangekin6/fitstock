@@ -1,0 +1,29 @@
+.env
+
+# Environnement virtuel
+venv/
+env/
+
+# Variables secrètes
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Django media uploads
+media/
+
+# Django static collect
+staticfiles/
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini

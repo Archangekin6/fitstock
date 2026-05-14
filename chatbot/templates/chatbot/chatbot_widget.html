@@ -1,0 +1,152 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot</title>
+    <style>
+      #chatbot-icon {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+        background: #0d6efd;
+        color: white;
+        font-size: 22px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        z-index: 99999;
+      }
+
+      #chatbot-window {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 340px;
+        height: 450px;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.25);
+        display: none;
+        flex-direction: column;
+        z-index: 99999;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+
+      #chatbot-header {
+        background: #0d6efd;
+        color: white;
+        padding: 12px;
+        font-size: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #chatbot-header button {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      #chatbot-body {
+        flex: 1;
+        padding: 12px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        font-size: 14px;
+      }
+
+      .bot-msg {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 12px;
+        margin: 8px 0;
+        max-width: 85%;
+        line-height: 1.4;
+      }
+
+      .user-msg {
+        background: #0d6efd;
+        color: white;
+        padding: 10px;
+        border-radius: 12px;
+        margin: 8px 0;
+        max-width: 85%;
+        margin-left: auto;
+        line-height: 1.4;
+      }
+
+      #chatbot-footer {
+        display: flex;
+        border-top: 1px solid #ddd;
+        background: white;
+      }
+
+      #chatbot-input {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        outline: none;
+        font-size: 14px;
+      }
+
+      #chatbot-send {
+        background: #0d6efd;
+        color: white;
+        border: none;
+        padding: 12px 15px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      #chatbot-send:hover {
+        background: #0b5ed7;
+      }
+
+      #chatbot-loading {
+        font-style: italic;
+        color: #777;
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chatbot-icon">💬</div>
+
+    <div id="chatbot-window">
+      <div id="chatbot-header">
+        <span>Assistant FitStock</span>
+        <button id="chatbot-close">✖</button>
+      </div>
+
+      <div id="chatbot-body">
+        <div class="bot-msg">
+          Bonjour 👋 Je suis ton assistant intelligent FitStock.<br />
+          Pose une question comme : <b>"stock riz"</b> ou
+          <b>"ajoute 20 sucre"</b>
+        </div>
+      </div>
+
+      <div id="chatbot-footer">
+        <input
+          type="text"
+          id="chatbot-input"
+          placeholder="Écris un message..."
+          autocomplete="off"
+        />
+        <button id="chatbot-send">➤</button>
+      </div>
+    </div>
+    <script src="{% static 'chatbot/chatbot.js' %}"></script>
+  </body>
+</html>

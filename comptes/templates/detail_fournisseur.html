@@ -1,0 +1,265 @@
+{% extends 'base.html' %} {% load static %} {% block title %}{{ fournisseur.nom
+}} – Fitstock{% endblock %} {% block content %}
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #fff;
+    --border: #e2e5ea;
+    --primary: #4f46e5;
+    --primary-h: #4338ca;
+    --text: #111827;
+    --muted: #6b7280;
+    --green: #10b981;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+  .fd-wrapper {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 2.5rem 1rem 4rem;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .fd-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .fp-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    margin-bottom: 1.5rem;
+  }
+  .fp-back:hover {
+    color: var(--primary);
+  }
+
+  .fd-hero {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .fd-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .fd-nom {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .fd-meta {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .fd-infos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .fd-info-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .fd-info-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 0.3rem;
+  }
+  .fd-info-val {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .fd-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .fd-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .fd-card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .fd-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .fd-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    background: #f9fafb;
+    border-bottom: 1px solid var(--border);
+  }
+  .fd-table td {
+    padding: 0.9rem 1.25rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .fd-table tr:last-child td {
+    border-bottom: none;
+  }
+  .fd-table tr:hover td {
+    background: #f9fafb;
+  }
+  .badge-produit {
+    background: #ede9fe;
+    color: #5b21b6;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .qty-green {
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  .fd-empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+  }
+</style>
+
+<div class="fd-wrapper">
+  <div class="fd-container">
+    <a href="{% url 'fournisseurs' %}" class="fp-back"
+      >&#8592; Retour aux fournisseurs</a
+    >
+
+    <!-- Hero -->
+    <div class="fd-hero">
+      <div class="fd-avatar">{{ fournisseur.nom|first|upper }}</div>
+      <div>
+        <h1 class="fd-nom">{{ fournisseur.nom }}</h1>
+        <p class="fd-meta">
+          Fournisseur depuis le {{ fournisseur.date_ajout|date:"d/m/Y" }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Infos -->
+    <div class="fd-infos">
+      {% if fournisseur.telephone %}
+      <div class="fd-info-card">
+        <p class="fd-info-label">&#128222; Telephone</p>
+        <p class="fd-info-val">{{ fournisseur.telephone }}</p>
+      </div>
+      {% endif %} {% if fournisseur.email %}
+      <div class="fd-info-card">
+        <p class="fd-info-label">&#9993; Email</p>
+        <p class="fd-info-val">{{ fournisseur.email }}</p>
+      </div>
+      {% endif %} {% if fournisseur.ville %}
+      <div class="fd-info-card">
+        <p class="fd-info-label">&#127961; Ville</p>
+        <p class="fd-info-val">{{ fournisseur.ville }}</p>
+      </div>
+      {% endif %} {% if fournisseur.pays %}
+      <div class="fd-info-card">
+        <p class="fd-info-label">&#127758; Pays</p>
+        <p class="fd-info-val">{{ fournisseur.pays }}</p>
+      </div>
+      {% endif %} {% if fournisseur.adresse %}
+      <div class="fd-info-card">
+        <p class="fd-info-label">&#128205; Adresse</p>
+        <p class="fd-info-val">{{ fournisseur.adresse }}</p>
+      </div>
+      {% endif %}
+      <div class="fd-info-card">
+        <p class="fd-info-label">&#128230; Total entrees</p>
+        <p class="fd-info-val">
+          {{ entrees.count }} entree{{ entrees.count|pluralize }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Historique entrees -->
+    <div class="fd-card">
+      <div class="fd-card-header">
+        <p class="fd-card-title">Historique des entrees de stock</p>
+      </div>
+      {% if entrees %}
+      <div style="overflow-x: auto">
+        <table class="fd-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Quantite</th>
+              <th>Prix achat</th>
+              <th>N&#176; Lot</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in entrees %}
+            <tr>
+              <td><span class="badge-produit">{{ e.produit.nom }}</span></td>
+              <td><span class="qty-green">+{{ e.quantite }}</span></td>
+              <td>{{ e.prix_achat }} FCFA</td>
+              <td>{{ e.numero_lot|default:"–" }}</td>
+              <td>{{ e.date_entree|date:"d/m/Y" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="fd-empty">
+        <p>Aucune entree de stock pour ce fournisseur.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

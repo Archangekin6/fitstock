@@ -1,0 +1,738 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Sortie stock –
+Fitstock{% endblock %} {% block content %}
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #fff;
+    --border: #e2e5ea;
+    --primary: #4f46e5;
+    --primary-h: #4338ca;
+    --text: #111827;
+    --muted: #6b7280;
+    --orange: #f97316;
+    --orange-h: #ea6c0a;
+    --red: #ef4444;
+    --red-h: #dc2626;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+  .ss-wrapper {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 2.5rem 1rem 4rem;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .ss-container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .ss-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .ss-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .ss-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .btn-add {
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .btn-add:hover {
+    background: var(--orange-h);
+  }
+
+  /* Stats */
+  .ss-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 0.4rem;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .stat-value.orange {
+    color: var(--orange);
+  }
+  .stat-value.red {
+    color: var(--red);
+  }
+
+  /* Badges motif */
+  .badge-motif {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge-vente {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  .badge-consommation {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+  .badge-perte {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  .badge-retour {
+    background: #cffafe;
+    color: #155e75;
+  }
+  .badge-autre {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  /* Table */
+  .ss-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .ss-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .ss-card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .ss-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ss-table th {
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    background: #f9fafb;
+    border-bottom: 1px solid var(--border);
+  }
+  .ss-table td {
+    padding: 0.9rem 1.25rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .ss-table tr:last-child td {
+    border-bottom: none;
+  }
+  .ss-table tr:hover td {
+    background: #f9fafb;
+  }
+
+  .badge-produit {
+    background: #ede9fe;
+    color: #5b21b6;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge-ref {
+    background: #f0fdf4;
+    color: #166534;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: monospace;
+  }
+  .qty-sortie {
+    color: var(--red);
+    font-weight: 700;
+  }
+
+  .btn-del-sm {
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    border: 1.5px solid #fecaca;
+    background: transparent;
+    color: var(--red);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-del-sm:hover {
+    background: #fef2f2;
+  }
+
+  .ss-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .ss-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.5rem 0;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .modal-close:hover {
+    color: var(--text);
+  }
+  .modal-body {
+    padding: 1.5rem;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .fp-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 500px) {
+    .fp-grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+  .fp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .fp-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .fp-label .req {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+  .fp-field .form-control,
+  .fp-field .form-select {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    width: 100%;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .fp-field .form-control:focus,
+  .fp-field .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background: #fff;
+  }
+  textarea.form-control {
+    resize: vertical;
+  }
+
+  /* Alerte stock */
+  .stock-alert {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.83rem;
+    color: #9a3412;
+    margin-top: 0.4rem;
+    display: none;
+  }
+
+  .btn-cancel {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+  }
+  .btn-cancel:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-save {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save:hover {
+    background: var(--orange-h);
+  }
+
+  .fp-errors {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .fp-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .fp-errors li {
+    font-size: 0.85rem;
+    color: #b91c1c;
+  }
+
+  .modal-del-body {
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  .modal-del-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .modal-del-text {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.5rem 0 1.5rem;
+  }
+  .btn-confirm-del {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--red);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-confirm-del:hover {
+    background: var(--red-h);
+  }
+
+  @media print {
+    body * { visibility: hidden; }
+    #zone-impression-sorties, #zone-impression-sorties * { visibility: visible; }
+    #zone-impression-sorties { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; }
+    .no-print { display: none !important; }
+  }
+</style>
+
+<div class="ss-wrapper">
+  <div class="ss-container">
+    <div class="ss-header">
+      <div>
+        <h1 class="ss-title">Sorties stock</h1>
+        <p class="ss-subtitle">Historique de toutes les sorties de produits</p>
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+        <button class="btn-add" onclick="imprimerSorties()">🖨️ Imprimer</button>
+        <button class="btn-add" onclick="document.getElementById('modal-ajout').classList.add('open')">&#8595; Nouvelle sortie</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="ss-stats">
+      <div class="stat-card">
+        <p class="stat-label">Total sorties</p>
+        <p class="stat-value orange">{{ sorties.count }}</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Produits concernes</p>
+        <p class="stat-value">{{ sorties|length }}</p>
+      </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="ss-card print-zone" id="zone-impression-sorties">
+      <!-- EN-TÊTE IMPRESSION -->
+      <div id="entete-print-sortie" style="display:none;">
+        <div class="print-header">
+          <div>
+            <div class="print-company-name" id="ps-nom">FITSTOCK</div>
+            <div class="print-company-sub" id="ps-adresse">Système de gestion de stock</div>
+            <div class="print-company-sub" id="ps-tel"></div>
+          </div>
+          <div>
+            <div class="print-doc-title">RAPPORT DES SORTIES DE STOCK</div>
+            <div class="print-doc-meta">
+              Imprimé le : <span id="ps-date"></span><br>
+              Total : {{ sorties.count }} sortie{{ sorties.count|pluralize }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ss-card-header no-print">
+        <p class="ss-card-title">Historique des sorties</p>
+      </div>
+
+      {% for s in sorties %} {% if forloop.first %}
+      <div style="overflow-x: auto">
+        <table class="ss-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Quantite</th>
+              <th>Motif</th>
+              <th>Destinataire</th>
+              <th>Reference</th>
+              <th>Date sortie</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% endif %}
+            <tr>
+              <td><span class="badge-produit">{{ s.produit.nom }}</span></td>
+              <td><span class="qty-sortie">-{{ s.quantite }}</span></td>
+              <td>
+                <span class="badge-motif badge-{{ s.motif }}"
+                  >{{ s.get_motif_display }}</span
+                >
+              </td>
+              <td>{{ s.destinataire|default:"–" }}</td>
+              <td>
+                {% if s.numero_reference %}
+                <span class="badge-ref">{{ s.numero_reference }}</span>
+                {% else %}–{% endif %}
+              </td>
+              <td>{{ s.date_sortie|date:"d/m/Y" }}</td>
+              <td>
+                <button
+                  class="btn-del-sm"
+                  data-pk="{{ s.pk }}"
+                  data-info="{{ s.produit.nom }} ({{ s.quantite }} unites)"
+                >
+                  &#128465; Supprimer
+                </button>
+              </td>
+            </tr>
+            {% if forloop.last %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %} {% empty %}
+      <div class="ss-empty">
+        <div class="ss-empty-icon">&#128230;</div>
+        <p>Aucune sortie enregistree pour le moment.</p>
+        <button
+          class="btn-add"
+          onclick="document.getElementById('modal-ajout').classList.add('open')"
+        >
+          &#8595; Enregistrer la premiere sortie
+        </button>
+      </div>
+      {% endfor %}
+    </div><!-- /ss-card zone-impression-sorties -->
+  </div>
+</div>
+
+<!-- Modal Ajout -->
+<div class="modal-overlay" id="modal-ajout">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title">Nouvelle sortie de stock</h2>
+      <button
+        class="modal-close"
+        onclick="
+          document.getElementById('modal-ajout').classList.remove('open')
+        "
+      >
+        &#10005;
+      </button>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="modal-body">
+        {% if form.errors %}
+        <div class="fp-errors">
+          <ul>
+            {% for field in form %} {% for error in field.errors %}
+            <li><strong>{{ field.label }}</strong> : {{ error }}</li>
+            {% endfor %} {% endfor %} {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.produit.id_for_label }}"
+            >Produit <span class="req">*</span></label
+          >
+          {{ form.produit }}
+          <div class="stock-alert" id="stock-alert">
+            &#9888; Stock disponible : <strong id="stock-dispo"></strong> unites
+          </div>
+        </div>
+
+        <div class="fp-grid-2">
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.quantite.id_for_label }}"
+              >Quantite <span class="req">*</span></label
+            >
+            {{ form.quantite }}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.motif.id_for_label }}"
+              >Motif <span class="req">*</span></label
+            >
+            {{ form.motif }}
+          </div>
+        </div>
+
+        <div class="fp-grid-2">
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.date_sortie.id_for_label }}"
+              >Date de sortie <span class="req">*</span></label
+            >
+            {{ form.date_sortie }}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.destinataire.id_for_label }}"
+              >Destinataire</label
+            >
+            {{ form.destinataire }}
+          </div>
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.numero_reference.id_for_label }}"
+            >Numero de reference</label
+          >
+          {{ form.numero_reference }}
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.note.id_for_label }}"
+            >Note</label
+          >
+          {{ form.note }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-cancel"
+          onclick="
+            document.getElementById('modal-ajout').classList.remove('open')
+          "
+        >
+          Annuler
+        </button>
+        <button type="submit" class="btn-save">
+          &#8595; Enregistrer la sortie
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Suppression -->
+<div class="modal-overlay" id="modal-suppression">
+  <div class="modal-box" style="max-width: 420px">
+    <div class="modal-del-body">
+      <div class="modal-del-icon">&#9888;</div>
+      <h2 class="modal-title">Supprimer la sortie</h2>
+      <p class="modal-del-text">
+        Voulez-vous vraiment supprimer la sortie
+        <strong id="info-sortie-del"></strong> ? Le stock sera remis a jour.
+      </p>
+      <form method="post" id="form-suppression" action="">
+        {% csrf_token %}
+        <div style="display: flex; justify-content: center; gap: 0.75rem">
+          <button
+            type="button"
+            class="btn-cancel"
+            onclick="
+              document
+                .getElementById('modal-suppression')
+                .classList.remove('open')
+            "
+          >
+            Annuler
+          </button>
+          <button type="submit" class="btn-confirm-del">Oui, supprimer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Données stock produits pour JS -->
+<script>
+  window.addEventListener("DOMContentLoaded", function () {
+    // Rouvrir modal si erreurs
+    if (document.querySelector(".fp-errors")) {
+      document.getElementById("modal-ajout").classList.add("open");
+    }
+
+    // Afficher stock dispo quand on choisit un produit
+    var selectProduit = document.getElementById(
+      "{{ form.produit.id_for_label }}",
+    );
+    if (selectProduit) {
+      selectProduit.addEventListener("change", function () {
+        var option = this.options[this.selectedIndex];
+        var stock = option.getAttribute("data-stock");
+        var alert = document.getElementById("stock-alert");
+        var dispo = document.getElementById("stock-dispo");
+        if (stock !== null && stock !== undefined) {
+          dispo.textContent = stock;
+          alert.style.display = "block";
+        } else {
+          alert.style.display = "none";
+        }
+      });
+    }
+
+    // Boutons supprimer
+    document.querySelectorAll(".btn-del-sm").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var pk = this.getAttribute("data-pk");
+        var info = this.getAttribute("data-info");
+        document.getElementById("info-sortie-del").textContent = info;
+        document.getElementById("form-suppression").action =
+          "/sortie-stock/supprimer/" + pk + "/";
+        document.getElementById("modal-suppression").classList.add("open");
+      });
+    });
+
+    // Fermer en cliquant dehors
+    document.querySelectorAll(".modal-overlay").forEach(function (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) overlay.classList.remove("open");
+      });
+    });
+  });
+</script>
+
+<script>
+  const nomEnt  = "{{ request.user.nom_entreprise|default:'FITSTOCK' }}";
+  const adrEnt  = "{{ request.user.adresse_entreprise|default:'Système de gestion de stock' }}";
+  const telEnt  = "{{ request.user.telephone_entreprise }}";
+
+  function imprimerSorties() {
+    document.getElementById("ps-nom").textContent    = nomEnt.toUpperCase();
+    document.getElementById("ps-adresse").textContent = adrEnt;
+    if (telEnt) document.getElementById("ps-tel").textContent = "Tél : " + telEnt;
+    document.getElementById("ps-date").textContent   = new Date().toLocaleDateString("fr-FR", {day:"2-digit",month:"long",year:"numeric"});
+    document.getElementById("entete-print-sortie").style.display = "block";
+    window.print();
+    setTimeout(() => { document.getElementById("entete-print-sortie").style.display = "none"; }, 1000);
+  }
+</script>
+{% endblock %}

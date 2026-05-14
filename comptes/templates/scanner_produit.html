@@ -1,0 +1,249 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<style>
+.scanner-wrap{max-width:540px;margin:0 auto;background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.07);padding:28px;}
+#scanner-viewport{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#111;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;}
+#scanner-viewport video,#scanner-viewport canvas.drawingBuffer{position:absolute;top:0;left:0;width:100%!important;height:100%!important;object-fit:cover;}
+.scan-frame{position:absolute;inset:15%;border:2px solid rgba(230,92,0,0.8);border-radius:8px;z-index:10;box-shadow:0 0 0 9999px rgba(0,0,0,0.4);pointer-events:none;display:none;}
+.scan-line{position:absolute;left:15%;right:15%;height:2px;background:linear-gradient(90deg,transparent,#e65c00,transparent);animation:scanAnim 2s linear infinite;z-index:11;pointer-events:none;display:none;}
+@keyframes scanAnim{0%{top:20%}100%{top:80%}}
+.scan-placeholder{color:#888;font-size:13px;text-align:center;padding:20px;z-index:5;}
+.confidence-bar-wrap{margin-top:10px;display:none;}
+.confidence-bar{height:6px;border-radius:99px;background:#f0f0f0;overflow:hidden;}
+.confidence-fill{height:100%;border-radius:99px;background:#e65c00;transition:width 0.15s;}
+.confidence-label{font-size:11px;color:#888;margin-top:4px;text-align:center;}
+.result-box{background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 16px;margin-top:14px;display:none;align-items:center;gap:12px;}
+.result-box.show{display:flex;}
+.type-btns{display:flex;gap:12px;margin-top:20px;}
+.type-btn{flex:1;padding:16px 12px;border-radius:12px;border:2px solid #e0e0e0;background:white;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.2s;text-align:center;color:#333;display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;}
+.type-btn i{font-size:1.6rem;}
+.type-btn:hover{border-color:#e65c00;background:linear-gradient(135deg,#e65c00,#f9d423);color:white;}
+.btn-action{padding:9px 20px;border-radius:10px;border:none;font-weight:600;font-size:0.85rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.btn-dark{background:#1a1a2e;color:white;}
+.error-box{background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:12px 16px;margin-top:14px;font-size:13px;color:#b91c1c;display:none;}
+#step-type{display:none;}
+</style>
+
+<div class="mb-3">
+  <a href="{% url 'produit' %}" style="color:#888;text-decoration:none;font-size:13px;">
+    <i class="bi bi-arrow-left me-1"></i>Retour aux produits
+  </a>
+</div>
+
+<div class="scanner-wrap">
+  <h1 class="fw-bold mb-1" style="font-size:1.3rem;">
+    <i class="bi bi-upc-scan me-2" style="color:#e65c00;"></i>Scanner un produit
+  </h1>
+  <p class="text-muted mb-4" style="font-size:13px;">Maintenez le code-barres bien visible dans le cadre</p>
+
+  <div id="step-scan">
+    <div id="scanner-viewport">
+      <div class="scan-placeholder" id="scan-placeholder">
+        <i class="bi bi-camera" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+        Demarrage de la camera...
+      </div>
+      <div class="scan-frame" id="scan-frame"></div>
+      <div class="scan-line" id="scan-line"></div>
+    </div>
+
+    <!-- Barre de confiance -->
+    <div class="confidence-bar-wrap" id="confidence-wrap">
+      <div class="confidence-bar"><div class="confidence-fill" id="confidence-fill" style="width:0%"></div></div>
+      <div class="confidence-label" id="confidence-label">Confirmation en cours... 0/5</div>
+    </div>
+
+    <div class="error-box" id="error-box">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      <span id="error-msg">Impossible d acceder a la camera.</span>
+    </div>
+
+    <div class="result-box" id="result-box">
+      <i class="bi bi-check-circle-fill" style="font-size:1.5rem;color:#16a34a;flex-shrink:0;"></i>
+      <div>
+        <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;">Code confirme</div>
+        <div style="font-size:1rem;font-weight:800;color:#1a1a2e;" id="result-code">-</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-action btn-dark" onclick="restartScanner()">
+        <i class="bi bi-arrow-clockwise"></i> Rescanner
+      </button>
+      <button class="btn-action" style="background:#f3f4f6;color:#333;" onclick="toggleManuel()">
+        <i class="bi bi-keyboard"></i> Saisir manuellement
+      </button>
+    </div>
+
+    <div id="saisie-manuelle" style="display:none;margin-top:14px;">
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="code-manuel" placeholder="Ex: 3017620422003"
+          style="flex:1;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:0.9rem;outline:none;">
+        <button class="btn-action btn-dark" onclick="validerCodeManuel()">
+          <i class="bi bi-check-lg"></i> Valider
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="step-type">
+    <div style="background:#fff3e0;border:1.5px solid #f9d423;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <i class="bi bi-upc-scan" style="color:#e65c00;font-size:1.2rem;"></i>
+      <div>
+        <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;">Code confirme</div>
+        <div style="font-size:1rem;font-weight:800;color:#1a1a2e;" id="display-code">-</div>
+      </div>
+    </div>
+    <p class="fw-semibold mb-3" style="font-size:14px;">Ce produit est de quel type ?</p>
+    <div class="type-btns">
+      <a href="#" class="type-btn" onclick="return choisirType('alimentaire')">
+        <i class="bi bi-basket2"></i>
+        Alimentaire
+        <small style="font-size:10px;font-weight:400;opacity:0.7;">Nourriture, boissons...</small>
+      </a>
+      <a href="#" class="type-btn" onclick="return choisirType('non_alimentaire')">
+        <i class="bi bi-tools"></i>
+        Materiel
+        <small style="font-size:10px;font-weight:400;opacity:0.7;">Equipements, fournitures...</small>
+      </a>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn-action" style="background:#f3f4f6;color:#333;" onclick="retourScan()">
+        <i class="bi bi-arrow-left"></i> Rescanner
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+var scannedCode='', scanDone=false, quaggaStarted=false;
+
+// Systeme de vote : le code doit apparaitre CONFIRM_NEEDED fois consecutives
+var CONFIRM_NEEDED = 5;
+var votes = {};   // { code: count }
+var lastCode = '';
+
+function showError(msg){
+  document.getElementById('error-msg').textContent=msg;
+  document.getElementById('error-box').style.display='block';
+  document.getElementById('scan-placeholder').innerHTML='<i class="bi bi-camera-video-off" style="font-size:2rem;display:block;margin-bottom:8px;color:#dc2626;"></i>Camera indisponible';
+}
+
+function updateConfidence(code, count){
+  var wrap = document.getElementById('confidence-wrap');
+  var fill = document.getElementById('confidence-fill');
+  var label = document.getElementById('confidence-label');
+  wrap.style.display = 'block';
+  var pct = Math.min(100, Math.round(count / CONFIRM_NEEDED * 100));
+  fill.style.width = pct + '%';
+  fill.style.background = pct >= 100 ? '#16a34a' : '#e65c00';
+  label.textContent = 'Confirmation : ' + count + '/' + CONFIRM_NEEDED + ' — ' + code;
+}
+
+function startScanner(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showError("Navigateur incompatible. Utilisez la saisie manuelle.");return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+    .then(function(s){s.getTracks().forEach(function(t){t.stop();});initQuagga();})
+    .catch(function(){showError("Acces camera refuse. Utilisez la saisie manuelle.");});
+}
+
+function initQuagga(){
+  Quagga.init({
+    inputStream:{name:'Live',type:'LiveStream',
+      target:document.getElementById('scanner-viewport'),
+      constraints:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},
+    locator:{patchSize:'medium',halfSample:true},
+    numOfWorkers:2, frequency:10,
+    decoder:{readers:['ean_reader','ean_8_reader','code_128_reader','upc_reader','upc_e_reader']},
+    locate:true
+  }, function(err){
+    if(err){showError("Erreur scanner: "+err.message);return;}
+    quaggaStarted=true;
+    Quagga.start();
+    document.getElementById('scan-placeholder').style.display='none';
+    document.getElementById('scan-frame').style.display='block';
+    document.getElementById('scan-line').style.display='block';
+  });
+
+  Quagga.onDetected(function(result){
+    if(scanDone) return;
+    var code = result.codeResult.code;
+    // Ignorer codes trop courts ou invalides
+    if(!code || code.length < 6) return;
+    // Ignorer si le code change (reset votes)
+    if(code !== lastCode){
+      votes = {};
+      lastCode = code;
+    }
+    votes[code] = (votes[code] || 0) + 1;
+    updateConfidence(code, votes[code]);
+
+    if(votes[code] >= CONFIRM_NEEDED){
+      scanDone = true;
+      scannedCode = code;
+      if(quaggaStarted){try{Quagga.stop();}catch(e){}quaggaStarted=false;}
+      document.getElementById('result-code').textContent = code;
+      document.getElementById('result-box').classList.add('show');
+      document.getElementById('scan-frame').style.display='none';
+      document.getElementById('scan-line').style.display='none';
+      document.getElementById('confidence-wrap').style.display='none';
+      setTimeout(passerEtapeType, 800);
+    }
+  });
+}
+
+function passerEtapeType(){
+  document.getElementById('display-code').textContent=scannedCode;
+  document.getElementById('step-scan').style.display='none';
+  document.getElementById('step-type').style.display='block';
+}
+
+function restartScanner(){
+  scanDone=false; scannedCode=''; votes={}; lastCode='';
+  document.getElementById('result-box').classList.remove('show');
+  document.getElementById('error-box').style.display='none';
+  document.getElementById('confidence-wrap').style.display='none';
+  document.getElementById('confidence-fill').style.width='0%';
+  document.getElementById('scan-placeholder').style.display='flex';
+  document.getElementById('scan-placeholder').innerHTML='<i class="bi bi-camera" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Demarrage...';
+  if(quaggaStarted){try{Quagga.stop();}catch(e){}quaggaStarted=false;}
+  setTimeout(startScanner,300);
+}
+
+function retourScan(){
+  document.getElementById('step-type').style.display='none';
+  document.getElementById('step-scan').style.display='block';
+  restartScanner();
+}
+
+function choisirType(type){
+  if(!scannedCode) return false;
+  window.location.href='/produit/ajouter/'+type+'/?code='+encodeURIComponent(scannedCode);
+  return false;
+}
+
+function toggleManuel(){
+  var d=document.getElementById('saisie-manuelle');
+  d.style.display=d.style.display==='none'?'block':'none';
+  if(d.style.display==='block') document.getElementById('code-manuel').focus();
+}
+
+function validerCodeManuel(){
+  var code=document.getElementById('code-manuel').value.trim();
+  if(!code) return;
+  scanDone=true; scannedCode=code;
+  if(quaggaStarted){try{Quagga.stop();}catch(e){}quaggaStarted=false;}
+  passerEtapeType();
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  startScanner();
+  document.getElementById('code-manuel').addEventListener('keydown',function(e){
+    if(e.key==='Enter') validerCodeManuel();
+  });
+});
+</script>
+{% endblock %}

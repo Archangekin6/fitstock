@@ -1,0 +1,218 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Modifier {{
+famille.nom }} – Fitstock{% endblock %} {% block content %}
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --border: #e2e5ea;
+    --primary: #4f46e5;
+    --primary-h: #4338ca;
+    --text: #111827;
+    --muted: #6b7280;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+  .fp-wrapper {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 2.5rem 1rem 4rem;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .fp-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .fp-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .fp-back:hover {
+    color: var(--primary);
+  }
+  .fp-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0.5rem 0 0.25rem;
+  }
+  .fp-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0 0 2rem;
+  }
+  .fp-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+  }
+  .fp-card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .fp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .fp-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .fp-label .req {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+  .fp-field .form-control,
+  .fp-field .form-select {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    width: 100%;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .fp-field .form-control:focus,
+  .fp-field .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background: #fff;
+  }
+  textarea.form-control {
+    resize: vertical;
+  }
+  .fp-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .btn-cancel {
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn-cancel:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-save {
+    padding: 0.65rem 1.75rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save:hover {
+    background: var(--primary-h);
+  }
+  .fp-errors {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .fp-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .fp-errors li {
+    font-size: 0.85rem;
+    color: #b91c1c;
+  }
+</style>
+
+<div class="fp-wrapper">
+  <div class="fp-container">
+    <a href="{% url 'familles' %}" class="fp-back"
+      >&#8592; Retour aux familles</a
+    >
+    <h1 class="fp-title">Modifier la famille</h1>
+    <p class="fp-subtitle">{{ famille.nom }}</p>
+
+    <div class="fp-card">
+      <p class="fp-card-title">Informations de la famille</p>
+
+      {% if form.errors %}
+      <div class="fp-errors">
+        <ul>
+          {% for field in form %} {% for error in field.errors %}
+          <li><strong>{{ field.label }}</strong> : {{ error }}</li>
+          {% endfor %} {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.nom.id_for_label }}"
+            >Nom <span class="req">*</span></label
+          >
+          {{ form.nom }}
+        </div>
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.type.id_for_label }}"
+            >Type <span class="req">*</span></label
+          >
+          {{ form.type }}
+        </div>
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.description.id_for_label }}"
+            >Description</label
+          >
+          {{ form.description }}
+        </div>
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.image.id_for_label }}"
+            >Image</label
+          >
+          {{ form.image }}
+        </div>
+        <div class="fp-actions">
+          <a href="{% url 'familles' %}" class="btn-cancel">Annuler</a>
+          <button type="submit" class="btn-save">
+            Enregistrer les modifications
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

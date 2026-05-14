@@ -1,0 +1,705 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Fournisseurs –
+Fitstock{% endblock %} {% block content %}
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #fff;
+    --border: #e2e5ea;
+    --primary: #4f46e5;
+    --primary-h: #4338ca;
+    --text: #111827;
+    --muted: #6b7280;
+    --red: #ef4444;
+    --red-h: #dc2626;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  }
+  .fo-wrapper {
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 2.5rem 1rem 4rem;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .fo-container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .fo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .fo-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .fo-subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0;
+  }
+  .btn-add {
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .btn-add:hover {
+    background: var(--primary-h);
+  }
+  .fo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .fo-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  .fo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+  .fo-card-top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .fo-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .fo-card-nom {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+  .fo-card-ville {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0.2rem 0 0;
+  }
+  .fo-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+  }
+  .fo-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.83rem;
+    color: var(--muted);
+  }
+  .fo-info-icon {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .fo-info-val {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .fo-card-stats {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 1.5rem;
+  }
+  .fo-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .fo-stat-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .fo-stat-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .fo-card-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .btn-detail {
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .btn-detail:hover {
+    background: var(--primary-h);
+  }
+  .btn-edit {
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .btn-edit:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-del {
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: 1.5px solid #fecaca;
+    background: transparent;
+    color: var(--red);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .btn-del:hover {
+    background: #fef2f2;
+  }
+  .fo-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+    grid-column: 1/-1;
+  }
+  .fo-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.5rem 0;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .modal-close:hover {
+    color: var(--text);
+  }
+  .modal-body {
+    padding: 1.5rem;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem;
+  }
+  .fp-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 500px) {
+    .fp-grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+  .fp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .fp-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .fp-label .req {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+  .fp-field .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    width: 100%;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .fp-field .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background: #fff;
+  }
+  textarea.form-control {
+    resize: vertical;
+  }
+  .btn-cancel {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      border-color 0.2s,
+      color 0.2s;
+  }
+  .btn-cancel:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-save {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save:hover {
+    background: var(--primary-h);
+  }
+  .fp-errors {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  .fp-errors ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .fp-errors li {
+    font-size: 0.85rem;
+    color: #b91c1c;
+  }
+  .modal-del-body {
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  .modal-del-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .modal-del-text {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.5rem 0 1.5rem;
+  }
+  .btn-confirm-del {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--red);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .btn-confirm-del:hover {
+    background: var(--red-h);
+  }
+</style>
+
+<div class="fo-wrapper">
+  <div class="fo-container">
+    <div class="fo-header">
+      <div>
+        <h1 class="fo-title">Fournisseurs</h1>
+        <p class="fo-subtitle">
+          {{ fournisseurs.count }} fournisseur{{ fournisseurs.count|pluralize }}
+          enregistre{{ fournisseurs.count|pluralize }}
+        </p>
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+        <button class="btn-add" style="background:#1a1a2e;" onclick="imprimerFournisseurs()">
+          <i class="bi bi-printer me-1"></i> Imprimer
+        </button>
+        <button class="btn-add" onclick="document.getElementById('modal-ajout').classList.add('open')">
+          + Nouveau fournisseur
+        </button>
+      </div>
+    </div>
+
+    <!-- ZONE IMPRESSION -->
+    <div id="zone-print-fournisseurs" class="print-zone">
+
+      <div id="entete-print-fourn" style="display:none;">
+        <div class="print-header">
+          <div>
+            <div class="print-company-name" id="pf-nom">FITSTOCK</div>
+            <div class="print-company-sub" id="pf-adresse">Système de gestion de stock</div>
+            <div class="print-company-sub" id="pf-tel"></div>
+          </div>
+          <div>
+            <div class="print-doc-title">LISTE DES FOURNISSEURS</div>
+            <div class="print-doc-meta">
+              Imprimé le : <span id="pf-date"></span><br>
+              Total : {{ fournisseurs.count }} fournisseur{{ fournisseurs.count|pluralize }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tableau impression (caché à l'écran) -->
+      <table id="table-print-fourn" style="display:none;width:100%;border-collapse:collapse;font-size:11px;margin:0 32px;width:calc(100% - 64px);">
+        <thead>
+          <tr>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">#</th>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Nom</th>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Téléphone</th>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Email</th>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Ville</th>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Pays</th>
+            <th style="background:#1a1a2e;color:white;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Entrées</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in fournisseurs %}
+          <tr style="{% if forloop.counter|divisibleby:2 %}background:#fafafa;{% endif %}">
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;">{{ forloop.counter }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;font-weight:700;">{{ f.nom }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;">{{ f.telephone|default:"—" }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;">{{ f.email|default:"—" }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;">{{ f.ville|default:"—" }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;">{{ f.pays|default:"—" }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#333;font-weight:700;">{{ f.entreestock_set.count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div id="pied-print-fourn" style="display:none;padding:14px 32px;border-top:1px solid #e0e0e0;margin-top:20px;display:none;justify-content:space-between;font-size:10px;color:#aaa;">
+        <span id="pf-footer-nom">Fitstock — Système de gestion de stock</span>
+        <span>Total : {{ fournisseurs.count }} fournisseur{{ fournisseurs.count|pluralize }}</span>
+      </div>
+
+    </div>
+
+    <div class="fo-grid">
+      {% for f in fournisseurs %}
+      <div class="fo-card">
+        <div class="fo-card-top">
+          <div class="fo-avatar">{{ f.nom|first|upper }}</div>
+          <div>
+            <p class="fo-card-nom">{{ f.nom }}</p>
+            <p class="fo-card-ville">
+              {% if f.ville and f.pays %} {{ f.ville }}, {{ f.pays }} {% elif
+              f.ville %} {{ f.ville }} {% elif f.pays %} {{ f.pays }} {% else %}
+              Localisation non renseignee {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <div class="fo-card-info">
+          {% if f.telephone %}
+          <div class="fo-info-row">
+            <span class="fo-info-icon">&#128222;</span>
+            <span class="fo-info-val">{{ f.telephone }}</span>
+          </div>
+          {% endif %} {% if f.email %}
+          <div class="fo-info-row">
+            <span class="fo-info-icon">&#9993;</span>
+            <span class="fo-info-val">{{ f.email }}</span>
+          </div>
+          {% endif %} {% if f.adresse %}
+          <div class="fo-info-row">
+            <span class="fo-info-icon">&#128205;</span>
+            <span class="fo-info-val">{{ f.adresse|truncatechars:50 }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="fo-card-stats">
+          <div class="fo-stat">
+            <span class="fo-stat-label">Entrees</span>
+            <span class="fo-stat-val">{{ f.entreestock_set.count }}</span>
+          </div>
+        </div>
+
+        <div class="fo-card-actions">
+          <a href="{% url 'detail_fournisseur' f.pk %}" class="btn-detail"
+            >&#128065; Voir</a
+          >
+          <a href="{% url 'modifier_fournisseur' f.pk %}" class="btn-edit"
+            >&#9998; Modifier</a
+          >
+          <button class="btn-del" data-pk="{{ f.pk }}" data-nom="{{ f.nom }}">
+            &#128465; Supprimer
+          </button>
+        </div>
+      </div>
+      {% empty %}
+      <div class="fo-empty">
+        <div class="fo-empty-icon">&#128101;</div>
+        <p>Aucun fournisseur enregistre pour le moment.</p>
+        <button
+          class="btn-add"
+          onclick="document.getElementById('modal-ajout').classList.add('open')"
+        >
+          &#43; Ajouter le premier fournisseur
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ajout -->
+<div class="modal-overlay" id="modal-ajout">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title">Nouveau fournisseur</h2>
+      <button
+        class="modal-close"
+        onclick="
+          document.getElementById('modal-ajout').classList.remove('open')
+        "
+      >
+        &#10005;
+      </button>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="modal-body">
+        {% if form.errors %}
+        <div class="fp-errors">
+          <ul>
+            {% for field in form %} {% for error in field.errors %}
+            <li><strong>{{ field.label }}</strong> : {{ error }}</li>
+            {% endfor %} {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.nom.id_for_label }}"
+            >Nom <span class="req">*</span></label
+          >
+          {{ form.nom }}
+        </div>
+        <div class="fp-grid-2">
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.telephone.id_for_label }}"
+              >Telephone</label
+            >
+            {{ form.telephone }}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.email.id_for_label }}"
+              >Email</label
+            >
+            {{ form.email }}
+          </div>
+        </div>
+        <div class="fp-grid-2">
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.ville.id_for_label }}"
+              >Ville</label
+            >
+            {{ form.ville }}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label" for="{{ form.pays.id_for_label }}"
+              >Pays</label
+            >
+            {{ form.pays }}
+          </div>
+        </div>
+        <div class="fp-field">
+          <label class="fp-label" for="{{ form.adresse.id_for_label }}"
+            >Adresse</label
+          >
+          {{ form.adresse }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-cancel"
+          onclick="
+            document.getElementById('modal-ajout').classList.remove('open')
+          "
+        >
+          Annuler
+        </button>
+        <button type="submit" class="btn-save">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Suppression -->
+<div class="modal-overlay" id="modal-suppression">
+  <div class="modal-box" style="max-width: 420px">
+    <div class="modal-del-body">
+      <div class="modal-del-icon">&#9888;</div>
+      <h2 class="modal-title">Supprimer le fournisseur</h2>
+      <p class="modal-del-text">
+        Voulez-vous vraiment supprimer <strong id="nom-fourn-del"></strong> ?
+      </p>
+      <form method="post" id="form-suppression" action="">
+        {% csrf_token %}
+        <div style="display: flex; justify-content: center; gap: 0.75rem">
+          <button
+            type="button"
+            class="btn-cancel"
+            onclick="
+              document
+                .getElementById('modal-suppression')
+                .classList.remove('open')
+            "
+          >
+            Annuler
+          </button>
+          <button type="submit" class="btn-confirm-del">Oui, supprimer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.addEventListener("DOMContentLoaded", function () {
+    if (document.querySelector(".fp-errors")) {
+      document.getElementById("modal-ajout").classList.add("open");
+    }
+
+    document.querySelectorAll(".btn-del").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var pk = this.getAttribute("data-pk");
+        var nom = this.getAttribute("data-nom");
+        document.getElementById("nom-fourn-del").textContent = nom;
+        document.getElementById("form-suppression").action =
+          "/fournisseurs/supprimer/" + pk + "/";
+        document.getElementById("modal-suppression").classList.add("open");
+      });
+    });
+
+    document.querySelectorAll(".modal-overlay").forEach(function (overlay) {
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) overlay.classList.remove("open");
+      });
+    });
+  });
+
+  const nomEnt = "{{ request.user.nom_entreprise|default:'FITSTOCK' }}";
+  const adrEnt = "{{ request.user.adresse_entreprise|default:'Système de gestion de stock' }}";
+  const telEnt = "{{ request.user.telephone_entreprise }}";
+
+  function imprimerFournisseurs() {
+    document.getElementById("pf-nom").textContent     = nomEnt.toUpperCase();
+    document.getElementById("pf-adresse").textContent = adrEnt;
+    if (telEnt) document.getElementById("pf-tel").textContent = "Tél : " + telEnt;
+    document.getElementById("pf-footer-nom").textContent = nomEnt + " — Système de gestion de stock";
+    document.getElementById("pf-date").textContent = new Date().toLocaleDateString("fr-FR", {day:"2-digit",month:"long",year:"numeric"});
+    document.getElementById("entete-print-fourn").style.display = "block";
+    document.getElementById("table-print-fourn").style.display  = "table";
+    document.getElementById("pied-print-fourn").style.display   = "flex";
+    window.print();
+    setTimeout(function() {
+      document.getElementById("entete-print-fourn").style.display = "none";
+      document.getElementById("table-print-fourn").style.display  = "none";
+      document.getElementById("pied-print-fourn").style.display   = "none";
+    }, 1000);
+  }
+</script>
+{% endblock %}

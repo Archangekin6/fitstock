@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  /* ── CARTES DASHBOARD (style original) ── */
+  .card-dashboard {
+    border: none;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .card-dashboard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+  }
+  .card-dashboard h4 {
+    font-size: 15px;
+    font-weight: 500;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  .card-dashboard h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+  }
+  .card-dashboard small { font-size: 12.5px; }
+
+  /* ── PANELS (graphe & tableaux) ── */
+  .panel {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 22px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .panel-title {
+    font-size: 14px; font-weight: 700; color: #1a1a1a;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink:0; }
+  .panel-link { font-size: 12px; font-weight: 600; color: #e65c00; text-decoration: none; }
+  .panel-link:hover { text-decoration: underline; }
+
+  /* ── MINI TABLE ── */
+  .mini-table { width: 100%; border-collapse: collapse; }
+  .mini-table th {
+    padding: 10px 20px;
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: #bbb; background: #fafafa;
+    border-bottom: 1px solid #f0f0f0; text-align: left;
+  }
+  .mini-table td {
+    padding: 12px 20px; font-size: 13px; color: #333;
+    border-bottom: 1px solid #f5f5f5; vertical-align: middle;
+  }
+  .mini-table tbody tr:last-child td { border-bottom: none; }
+  .mini-table tbody tr:hover td { background: #fafafa; }
+
+  .badge-in   { background:#dcfce7; color:#16a34a; font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; white-space:nowrap; }
+  .badge-out  { background:#fee2e2; color:#dc2626; font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; white-space:nowrap; }
+  .badge-motif{ background:#e0f2fe; color:#0369a1; font-size:10px; font-weight:600; padding:2px 8px; border-radius:99px; white-space:nowrap; }
+
+  .qty-in    { color:#16a34a; font-weight:700; }
+  .qty-out   { color:#dc2626; font-weight:700; }
+  .qty-alert { color:#dc2626; font-weight:700; }
+  .qty-warn  { color:#d97706; font-weight:700; }
+
+  /* alert bar */
+  .alert-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .alert-bar { width:70px; height:5px; border-radius:99px; background:#f0f0f0; overflow:hidden; }
+  .alert-bar-fill { height:100%; border-radius:99px; background:#dc2626; }
+  .alert-bar-fill.warn { background:#f59e0b; }
+
+  .empty-state { text-align:center; padding:28px 20px; color:#bbb; font-size:13px; }
+</style>
+
+<!-- Header -->
+<div class="px-2 mb-1">
+  <h1 class="fw-bold mb-0">Tableau de bord</h1>
+  <p class="text-muted" style="font-size:13px">L'ensemble de votre inventaire</p>
+</div>
+
+<!-- ── SEARCH BAR ── -->
+<div class="px-2 mb-4">
+  <form method="get" action="{% url 'produit' %}" style="display:flex;gap:10px;align-items:center;background:white;border-radius:14px;padding:12px 18px;box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+    <i class="bi bi-search" style="font-size:16px;color:#aaa;flex-shrink:0;"></i>
+    <input type="text" name="q" placeholder="Rechercher un produit par nom, code ou famille..." autocomplete="off"
+      style="flex:1;border:none;outline:none;font-size:0.92rem;color:#1a1a1a;background:transparent;">
+    <input type="hidden" name="filtre" value="tout">
+    <button type="submit" style="padding:8px 20px;background:linear-gradient(135deg,#e65c00,#f9d423);color:white;border:none;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;">
+      Rechercher
+    </button>
+  </form>
+</div>
+
+<!-- ── CARTES KPI (style original) ── -->
+<div class="row g-4 px-2 mb-4">
+
+  <!-- Total produits -->
+  <div class="col-12 col-md-6">
+    <div class="card-dashboard">
+      <div>
+        <h4>Total des produits</h4>
+        <h3>{{ total_produits|intcomma }}</h3>
+        <small class="{% if trend_produits >= 0 %}text-success{% else %}text-danger{% endif %}">
+          {% if trend_produits >= 0 %}^{% else %}↓{% endif %} Soit {{ trend_produits }}% ce mois
+        </small>
+      </div>
+      <img src="{% static 'comptes/images/stock.png' %}" width="150" height="100" alt="produits" />
+    </div>
+  </div>
+
+  <!-- Valeur du stock -->
+  <div class="col-12 col-md-6">
+    <div class="card-dashboard">
+      <div>
+        <h4>Valeur du stock</h4>
+        <h3>{{ valeur_stock|floatformat:0|intcomma }} F</h3>
+        <small class="text-success">^ Valeur actuelle</small>
+      </div>
+      <img src="{% static 'comptes/images/economie.png' %}" width="150" height="100" alt="valeur" />
+    </div>
+  </div>
+
+  <!-- Produits sortis -->
+  <div class="col-12 col-md-6">
+    <div class="card-dashboard">
+      <div>
+        <h4>Produits sortis</h4>
+        <h3>{{ produits_sortis|intcomma }}</h3>
+        <small class="{% if trend_sortis >= 0 %}text-success{% else %}text-danger{% endif %}">
+          {% if trend_sortis >= 0 %}^{% else %}↓{% endif %} {{ trend_sortis }}% ce mois
+        </small>
+      </div>
+      <img src="{% static 'comptes/images/boite.png' %}" width="150" height="100" alt="sorties" />
+    </div>
+  </div>
+
+  <!-- Alerte stock -->
+  <div class="col-12 col-md-6">
+    <div class="card-dashboard">
+      <div>
+        <h4>Alerte stock</h4>
+        <h3>{{ alertes_count }}</h3>
+        <small class="text-danger">nécessite attention</small>
+      </div>
+      <img src="{% static 'comptes/images/alerte.png' %}" width="150" height="100" alt="alerte" />
+    </div>
+  </div>
+
+</div><!-- /row cartes -->
+
+<!-- ── GRAPHE ── -->
+<div class="px-2 mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">
+        <span class="panel-dot" style="background:#e65c00"></span>
+        Mouvements de stock — {{ nom_mois }} {{ annee }}
+      </span>
+      <span style="font-size:12px;color:#bbb">Entrées & sorties par jour</span>
+    </div>
+    <div style="padding:20px 24px; height:270px; position:relative;">
+      <canvas id="mouvementsChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── TABLEAUX ENTRÉES / SORTIES ── -->
+<div class="row g-4 px-2 mb-4">
+
+  <!-- Dernières entrées -->
+  <div class="col-12 col-lg-6">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">
+          <span class="panel-dot" style="background:#16a34a"></span>
+          Dernières entrées
+        </span>
+        <a href="{% url 'entree_stock' %}" class="panel-link">Voir tout →</a>
+      </div>
+      {% if dernieres_entrees %}
+      <table class="mini-table">
+        <thead>
+          <tr><th>Produit</th><th>Qté</th><th>Fournisseur</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for e in dernieres_entrees %}
+          <tr>
+            <td>
+              <span class="badge-in">↑ IN</span>
+              <span class="ms-1">{{ e.produit.nom|truncatechars:22 }}</span>
+            </td>
+            <td><span class="qty-in">+{{ e.quantite }}</span></td>
+            <td style="color:#888;font-size:12px">{{ e.fournisseur.nom|default:"—"|truncatechars:16 }}</td>
+            <td style="color:#bbb;font-size:11px">{{ e.date_entree|date:"d/m/Y" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-inbox" style="font-size:28px;color:#ddd;display:block;margin-bottom:6px"></i>
+        Aucune entrée récente
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Dernières sorties -->
+  <div class="col-12 col-lg-6">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">
+          <span class="panel-dot" style="background:#dc2626"></span>
+          Dernières sorties
+        </span>
+        <a href="{% url 'sortie_stock' %}" class="panel-link">Voir tout →</a>
+      </div>
+      {% if dernieres_sorties %}
+      <table class="mini-table">
+        <thead>
+          <tr><th>Produit</th><th>Qté</th><th>Motif</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for s in dernieres_sorties %}
+          <tr>
+            <td>
+              <span class="badge-out">↓ OUT</span>
+              <span class="ms-1">{{ s.produit.nom|truncatechars:22 }}</span>
+            </td>
+            <td><span class="qty-out">-{{ s.quantite }}</span></td>
+            <td><span class="badge-motif">{{ s.get_motif_display }}</span></td>
+            <td style="color:#bbb;font-size:11px">{{ s.date_sortie|date:"d/m/Y" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-inbox" style="font-size:28px;color:#ddd;display:block;margin-bottom:6px"></i>
+        Aucune sortie récente
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ── PRODUITS EN ALERTE ── -->
+{% if produits_en_alerte %}
+<div class="px-2 mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">
+        <span class="panel-dot" style="background:#dc2626"></span>
+        Produits en alerte de stock
+      </span>
+      <span style="font-size:12px;color:#bbb">
+        <i class="bi bi-info-circle me-1"></i>Quantité ≤ {{ seuil_alerte }} unités
+      </span>
+    </div>
+    <table class="mini-table">
+      <thead>
+        <tr><th>Produit</th><th>Famille</th><th>Type</th><th>Stock actuel</th><th>Niveau</th></tr>
+      </thead>
+      <tbody>
+        {% for p in produits_en_alerte %}
+        <tr>
+          <td><strong>{{ p.nom }}</strong></td>
+          <td style="color:#888">{{ p.famille.nom|default:"—" }}</td>
+          <td><span class="badge-motif">{{ p.get_type_display }}</span></td>
+          <td>
+            <span class="{% if p.quantite <= 3 %}qty-alert{% else %}qty-warn{% endif %}">
+              {{ p.quantite }} unités
+            </span>
+          </td>
+          <td>
+            <div class="alert-bar-wrap">
+              <div class="alert-bar">
+                <div class="alert-bar-fill {% if p.quantite > 5 %}warn{% endif %}"
+                     style="width:{% widthratio p.quantite seuil_alerte 100 %}%"></div>
+              </div>
+              <span style="font-size:11px;color:#bbb">{% widthratio p.quantite seuil_alerte 100 %}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── PRODUITS PROCHES PÉREMPTION ── -->
+{% if produits_peremption %}
+<div class="px-2 mb-4">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">
+        <span class="panel-dot" style="background:#f59e0b"></span>
+        Produits proches de la péremption
+      </span>
+      <span style="font-size:12px;color:#bbb">
+        <i class="bi bi-clock me-1"></i>Expire dans ≤ {{ jours_peremption }} jours
+      </span>
+    </div>
+    <table class="mini-table">
+      <thead>
+        <tr><th>Produit</th><th>Famille</th><th>Date expiration</th><th>Jours restants</th></tr>
+      </thead>
+      <tbody>
+        {% for p in produits_peremption %}
+        <tr>
+          <td><strong>{{ p.nom }}</strong></td>
+          <td style="color:#888">{{ p.famille.nom|default:"—" }}</td>
+          <td style="color:#d97706;font-weight:600">{{ p.date_expiration|date:"d/m/Y" }}</td>
+          <td>
+            {% with jours=p.date_expiration|timeuntil %}
+            <span style="background:#fef3c7;color:#92400e;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;">
+              ⏳ {{ jours }}
+            </span>
+            {% endwith %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Chart.js -->
+<script>
+(function () {
+  const labels  = {{ graph_labels|safe }};
+  const entrees = {{ graph_entrees|safe }};
+  const sorties = {{ graph_sorties|safe }};
+
+  new Chart(document.getElementById('mouvementsChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Entrées',
+          data: entrees,
+          backgroundColor: 'rgba(22,163,74,0.08)',
+          borderColor: 'rgba(22,163,74,0.85)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(22,163,74,0.85)',
+          tension: 0.4,
+          fill: true,
+        },
+        {
+          label: 'Sorties',
+          data: sorties,
+          backgroundColor: 'rgba(230,92,0,0.08)',
+          borderColor: 'rgba(230,92,0,0.85)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(230,92,0,0.85)',
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { font: { size: 12 }, boxWidth: 12, boxHeight: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          titleFont: { size: 12 },
+          bodyFont: { size: 12 },
+          padding: 10,
+          cornerRadius: 10,
+          callbacks: {
+            title: (items) => `Jour ${items[0].label}`,
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#bbb', maxTicksLimit: 15 } },
+        y: { grid: { color: '#f5f5f5' }, ticks: { font: { size: 11 }, color: '#bbb' }, beginAtZero: true }
+      },
+      animation: { duration: 700, easing: 'easeOutQuart' },
+    }
+  });
+});
+</script>
+
+{% endblock %}
